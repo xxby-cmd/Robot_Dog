@@ -65,6 +65,10 @@ add_executable(state_estimation_node src/state_estimation_node.cpp)
 target_link_libraries(state_estimation_node state_estimation)
 ament_target_dependencies(state_estimation_node ${dependencies})
 
+add_executable(leg_odometry_node src/leg_odometry_node.cpp)
+ament_target_dependencies(leg_odometry_node ${dependencies})
+install(TARGETS leg_odometry_node DESTINATION lib/${PROJECT_NAME})
+
 
 install(TARGETS 
     quadruped_controller

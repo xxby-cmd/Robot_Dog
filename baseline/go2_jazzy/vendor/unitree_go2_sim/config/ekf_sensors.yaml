@@ -1,0 +1,29 @@
+sensor_ekf:
+  ros__parameters:
+    use_sim_time: true
+    frequency: 50.0
+    sensor_timeout: 0.15
+    two_d_mode: false
+    publish_tf: true
+    print_diagnostics: true
+    transform_timeout: 0.0
+    transform_time_offset: 0.0
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: odom
+    # Feedback-derived height and body velocity only. No command or truth poses.
+    odom0: /odom/leg
+    odom0_config: [false, false, true,
+                   false, false, false,
+                   true, true, true,
+                   false, false, false,
+                   false, false, false]
+    odom0_queue_size: 20
+    imu0: /imu/data
+    # No absolute simulated yaw or acceleration-integrated translation.
+    imu0_config: [false, false, false,
+                  true, true, false,
+                  false, false, false,
+                  true, true, true,
+                  false, false, false]
+    imu0_queue_size: 30

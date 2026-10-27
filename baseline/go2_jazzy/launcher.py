@@ -14,7 +14,7 @@ spec.loader.exec_module(vm)
 def main():
     root = tk.Tk()
     root.title('Go2 行走仿真启动器')
-    root.geometry('500x455')
+    root.geometry('520x520')
     root.configure(bg='#f5f7fa')
     status = tk.StringVar(value='准备启动独立的机器狗行走环境。')
     tk.Label(root, text='Go2 行走仿真', font=('Microsoft YaHei UI', 22, 'bold'), bg='#f5f7fa').pack(pady=(22, 5))
@@ -24,18 +24,18 @@ def main():
     buttons = []
     verification_cancel = threading.Event()
 
-    def start():
+    def start(display_backend='sdl'):
         nonlocal busy
         if busy:
             return
         busy = True
-        for button in buttons[:2]:
+        for button in buttons[:3]:
             button.configure(state='disabled')
         verification_cancel.clear()
         status.set('正在应用独显配置并启动，随后核对实际显卡……')
         def work():
             try:
-                vm.start(progress=lambda text: messages.put(('status', text)))
+                vm.start(display_backend=display_backend, progress=lambda text: messages.put(('status', text)))
                 messages.put(('status', '正在等待 Ubuntu，并检查实际渲染器……'))
                 gpu = vm.wait_for_gpu(cancel_event=verification_cancel)
                 if verification_cancel.is_set():
@@ -57,7 +57,7 @@ def main():
         if busy:
             return
         busy = True
-        for button in buttons[:2]:
+        for button in buttons[:3]:
             button.configure(state='disabled')
         verification_cancel.set()
         def work():
@@ -71,7 +71,7 @@ def main():
                 messages.put(('done', None))
         threading.Thread(target=work, daemon=True).start()
 
-    for text, callback in [('启动 Go2 行走环境', start), ('安全关闭虚拟机', shutdown),
+    for text, callback in [('启动 Go2 行走环境', start), ('兼容显示启动（黑屏时尝试）', lambda:start('gtk')), ('安全关闭虚拟机', shutdown),
                            ('查看启动日志', lambda: subprocess.Popen(['notepad.exe', str(vm.ROOT / 'qemu.log')]))]:
         button = tk.Button(root, text=text, command=callback, width=30, font=('Microsoft YaHei UI', 11), pady=8)
         button.pack(pady=5)
@@ -91,7 +91,7 @@ def main():
                 status.set(text)
             elif kind == 'done':
                 busy = False
-                for button in buttons[:2]:
+                for button in buttons[:3]:
                     button.configure(state='normal')
         root.after(100, poll)
     root.after(100, poll)

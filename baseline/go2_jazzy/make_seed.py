@@ -55,7 +55,7 @@ for name, data, iso_name in [
 ]:
     iso.add_fp(io.BytesIO(data), len(data), iso_path=f'/{iso_name}.;1', joliet_path='/' + name, rr_name=name)
 payload = [SOURCE / 'provision.sh', SOURCE / 'apt_prefetch.py', RUNTIME / 'go2-champ-source.tar.gz', RUNTIME.parent / 'payload' / 'ros.key']
-payload += [path for name in ['start-simulation.sh', 'start-panel.sh', 'robot-dog-panel.py', 'start_physics.py', 'verify_walking.py', 'measure_performance.py', 'focus_robot.py', 'capture_guest.py', 'walking.gui.config'] if (path := SOURCE / name).exists()]
+payload += [path for name in ['start-simulation.sh', 'start-sensors.sh', 'sensor_viewer.py', 'verify_sensors.py', 'start-panel.sh', 'robot-dog-panel.py', 'start_physics.py', 'verify_walking.py', 'measure_performance.py', 'focus_robot.py', 'capture_guest.py', 'walking.gui.config'] if (path := SOURCE / name).exists()]
 for index, path in enumerate(payload):
     iso.add_file(str(path), iso_path=f'/FILE{index:03d}.;1', joliet_path='/' + path.name, rr_name=path.name)
 iso.write(str(RUNTIME / 'robot-dog-seed.iso'))

@@ -30,11 +30,12 @@ node = rclpy.create_node('go2_graphical_teleop')
 publisher = node.create_publisher(Twist, '/cmd_vel', 10)
 controller_client = node.create_client(ListControllers, '/controller_manager/list_controllers')
 root = tk.Tk()
-root.title('Go2 行走控制 · ROS2 CHAMP')
-root.geometry('410x610+10+35')
+root.title('Go2 行走与传感器 · ROS2 CHAMP')
+root.geometry('410x690+10+35')
 root.attributes('-topmost', True)
 root.configure(bg='#f5f7fa')
 status = tk.StringVar(value='准备启动行走仿真。')
+with_sensors = tk.BooleanVar(value=True)
 sensor_status = tk.StringVar(value='等待关节与 IMU 数据……')
 gpu_status = tk.StringVar(value='显卡：等待实际检测')
 gpu_verified = False
@@ -118,14 +119,15 @@ def start():
                 result = subprocess.run(['glxinfo', '-B'], capture_output=True, text=True, timeout=10)
                 renderer = next((line.split(':',1)[1].strip() for line in result.stdout.splitlines()
                                  if line.startswith('OpenGL renderer string:')), '')
-                valid = result.returncode == 0 and 'NVIDIA' in renderer and 'RTX 4060' in renderer and 'Accelerated: yes' in result.stdout
+                valid = result.returncode == 0 and 'Accelerated: yes' in result.stdout and not any(x in renderer.lower() for x in ('llvmpipe', 'softpipe'))
             except (OSError, subprocess.SubprocessError):
                 renderer, valid = '', False
             root.after(0, lambda: gpu_checked(renderer, valid))
         threading.Thread(target=check, daemon=True).start()
         return
     log = log_path.open('a')
-    process = subprocess.Popen(['/home/robot/bin/start-simulation.sh'], stdout=log,
+    entry = 'start-sensors.sh' if with_sensors.get() else 'start-simulation.sh'
+    process = subprocess.Popen(['/home/robot/bin/'+entry], stdout=log,
                                stderr=subprocess.STDOUT, start_new_session=True)
     log.close()
     status.set('正在加载 Go2、物理场景和 CHAMP 控制器……')
@@ -135,7 +137,7 @@ def gpu_checked(renderer, valid):
     gpu_checking = False
     gpu_verified = valid
     if valid:
-        gpu_status.set('显卡：RTX 4060（实际渲染已核对）')
+        gpu_status.set('显卡：'+renderer)
         start()
     else:
         if not renderer:
@@ -146,9 +148,8 @@ def gpu_checked(renderer, valid):
             else:
                 status.set('显卡检测超时，请稍候再点击“启动仿真”。')
             return
-        gpu_status.set('显卡：未通过独显核对')
-        status.set('未检测到 RTX 4060。请在 Windows 启动器中安全关闭并重新启动虚拟机。'+
-                   ('当前为 Intel 核显。' if 'Intel' in renderer else ''))
+        gpu_status.set('显卡：硬件加速未就绪')
+        status.set('当前渲染器：'+renderer+'。请检查宿主显卡设置后重新启动虚拟机。')
 
 def stop():
     global stopping
@@ -191,8 +192,11 @@ def focus_robot():
 
 tk.Label(root, text='Go2 行走控制', font=('Noto Sans CJK SC', 19, 'bold'), bg='#f5f7fa').pack(pady=(15, 3))
 tk.Label(root, text='ROS2 Jazzy · Gazebo Harmonic · CHAMP', bg='#f5f7fa').pack(pady=(0, 12))
-tk.Label(root, textvariable=gpu_status, bg='#f5f7fa', fg='#526071').pack(pady=(0, 4))
+tk.Label(root, textvariable=gpu_status, bg='#f5f7fa', fg='#526071', wraplength=380).pack(pady=(0, 4))
 tk.Button(root, text='启动仿真', command=start, width=26, pady=6).pack(pady=4)
+tk.Checkbutton(root, text='启用激光、深度相机与里程计（重启仿真生效）', variable=with_sensors, bg='#f5f7fa').pack()
+tk.Button(root, text='查看实时传感器', width=26,
+          command=lambda: subprocess.Popen(['python3', '/home/robot/bin/sensor_viewer.py'])).pack(pady=4)
 pad = tk.Frame(root, bg='#f5f7fa')
 pad.pack(pady=10)
 for text, row, col, velocity in [
@@ -277,6 +281,8 @@ def close():
     root.destroy()
 
 root.protocol('WM_DELETE_WINDOW', close)
+signal.signal(signal.SIGTERM, lambda *_: root.after(0, close))
+signal.signal(signal.SIGINT, lambda *_: root.after(0, close))
 root.after(50, tick)
 root.after(4000, start)
 root.mainloop()

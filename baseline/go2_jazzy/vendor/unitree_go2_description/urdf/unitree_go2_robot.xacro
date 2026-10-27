@@ -12,6 +12,12 @@
     <xacro:arg name="disable_d455" default="false"/>
     <xacro:arg name="disable_lidar_l1" default="false"/>
     <xacro:arg name="disable_velodyne_lidar" default="false"/>
+    <xacro:arg name="camera_width" default="640"/>
+    <xacro:arg name="camera_height" default="480"/>
+    <xacro:arg name="camera_rate" default="15"/>
+    <xacro:arg name="lidar_samples" default="600"/>
+    <xacro:arg name="lidar_channels" default="30"/>
+    <xacro:arg name="lidar_rate" default="10"/>
 
     <xacro:include filename="$(find unitree_go2_description)/urdf/const.xacro" />
     <xacro:include filename="$(find unitree_go2_description)/urdf/materials.xacro" />

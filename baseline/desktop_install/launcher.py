@@ -22,7 +22,7 @@ def main():
         return
     root = tk.Tk()
     root.title('Go2 行走仿真 · 本机部署')
-    root.geometry('530x470')
+    root.geometry('530x530')
     status = tk.StringVar(value='准备启动本机的独立仿真环境。')
     tk.Label(root, text='Go2 行走仿真', font=('Microsoft YaHei UI',22,'bold')).pack(pady=(22,8))
     tk.Label(root, text='Ubuntu 24.04 · ROS2 Jazzy · Gazebo Harmonic · CHAMP').pack(pady=5)
@@ -41,9 +41,10 @@ def main():
         status.set('正在处理，请稍候……')
         def work():
             try:
-                if action == 'start':
-                    vm.start(config, progress=lambda text:messages.put(('status', text)))
-                    text = vm.wait_for_graphics(config, progress=lambda text:messages.put(('status', text)),
+                if action in ('start', 'compatible'):
+                    selected = dict(config, display='gtk') if action == 'compatible' else config
+                    vm.start(selected, progress=lambda text:messages.put(('status', text)))
+                    text = vm.wait_for_graphics(selected, progress=lambda text:messages.put(('status', text)),
                                                 cancel_event=cancelled)
                 elif action == 'stop':
                     vm.shutdown(config)
@@ -59,7 +60,7 @@ def main():
             finally:
                 messages.put(('done', None))
         threading.Thread(target=work, daemon=True).start()
-    for label, action in [('启动行走环境','start'),('安全关闭虚拟机','stop'),('检查实际显卡','gpu')]:
+    for label, action in [('启动行走环境','start'),('兼容显示启动（黑屏时尝试）','compatible'),('安全关闭虚拟机','stop'),('检查实际显卡','gpu')]:
         button = tk.Button(root, text=label, width=30, pady=6, command=lambda action=action:run(action))
         button.pack(pady=5)
         buttons.append(button)
