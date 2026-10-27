@@ -1,0 +1,14 @@
+[
+  {
+    "time": "2026-10-27T20:15:56.9910158+08:00",
+    "event_id": 1002,
+    "process": "qemu-go2-jazzy.exe",
+    "type": "Stopped responding to Windows; closed"
+  },
+  {
+    "time": "2026-10-27T20:15:56.9327510+08:00",
+    "event_id": 1001,
+    "process": "qemu-go2-jazzy.exe",
+    "type": "AppHangB1"
+  }
+]

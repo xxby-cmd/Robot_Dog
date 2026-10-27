@@ -1,0 +1,29 @@
+{
+  "qmp": {
+    "return": {
+      "status": "running",
+      "running": true
+    }
+  },
+  "gpu": {
+    "status": "pass",
+    "renderer": "virgl (NVIDIA GeForce RTX 4060 Laptop GPU/PCIe/SSE2)",
+    "accelerated": true,
+    "checked_at": "2026-10-27T12:28:52.825832+00:00"
+  },
+  "graphics_ready_seconds": 28.27,
+  "process": {
+    "pid": 34260
+  },
+  "guest": {
+    "controllers": {
+      "joint_group_effort_controller": "active",
+      "joint_states_controller": "active"
+    },
+    "joints": 12,
+    "finite": true,
+    "clock_advanced": 1.0,
+    "boot_id": "9cbbf35d-2000-41ab-9254-074deaeb2b58",
+    "uptime": "61.49"
+  }
+}

@@ -9,6 +9,8 @@ import subprocess
 import sys
 import time
 from common import DEFAULT_CONFIG, SOURCE, assert_offline, load_config, port_open, preflight, write_json
+sys.path.insert(0, str(SOURCE))
+import startup
 
 def ssh_args(config):
     return [config['ssh'], '-i', config['key'], '-p', str(config['ssh_port']),
@@ -22,19 +24,7 @@ def remote(config, command, timeout=30):
                           creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
 
 def qmp(config, command):
-    with socket.create_connection(('127.0.0.1', config['qmp_port']), timeout=5) as sock:
-        stream = sock.makefile('rwb', buffering=0)
-        stream.readline()
-        for item in ('qmp_capabilities', command):
-            stream.write(json.dumps({'execute':item}).encode()+b'\n')
-            while True:
-                line = stream.readline()
-                if not line:
-                    raise ConnectionError('QEMU monitor disconnected')
-                reply = json.loads(line)
-                if 'return' in reply or 'error' in reply:
-                    break
-        return reply
+    return startup.qmp(config['qmp_port'], command)
 
 def command_line(config):
     root = Path(config['runtime'])
@@ -50,11 +40,12 @@ def command_line(config):
             '-qmp', f'tcp:127.0.0.1:{config["qmp_port"]},server=on,wait=off', '-rtc', 'base=utc',
             '-device', 'virtio-vga-gl', '-display', config['display']+',gl=on']
 
-def start(config):
-    if port_open(config['qmp_port']):
-        reply = qmp(config, 'query-name')
-        if reply.get('return', {}).get('name') != 'Go2 Desktop ROS2 Jazzy CHAMP':
-            raise RuntimeError('配置的监控端口被其他程序占用，请重新选择端口。')
+def start(config, progress=None):
+    with startup.operation_lock(Path(config['runtime'])/'jazzy'):
+        return _start(config, progress)
+
+def _start(config, progress):
+    if startup.existing(config['qmp_port'], 'Go2 Desktop ROS2 Jazzy CHAMP'):
         print('该桌面虚拟机已经运行。')
         return
     for field in ('qemu', 'disk', 'seed', 'key'):
@@ -65,26 +56,63 @@ def start(config):
     assert_offline(config)
     root = Path(config['runtime'])
     args = command_line(config)
-    with (root/'jazzy/qemu.log').open('a', encoding='utf-8') as log:
-        process = subprocess.Popen(args, cwd=Path(config['qemu']).parent, stdout=log, stderr=subprocess.STDOUT,
-                                   creationflags=subprocess.CREATE_NO_WINDOW)
-    write_json(root/'jazzy/vm-command.json', args)
-    write_json(root/'jazzy/process.json', {'pid':process.pid})
-    if config.get('performance_cores', True):
-        try:
-            sys.path.insert(0, str(SOURCE))
-            from host_scheduling import apply
-            write_json(root/'jazzy/host-scheduling.json', apply(process.pid))
-        except (OSError, AttributeError) as error:
-            print('进程调度未调整，保留系统默认：', error, flush=True)
-    deadline = time.monotonic()+20
-    while not port_open(config['qmp_port']):
-        if process.poll() is not None or time.monotonic() > deadline:
-            raise RuntimeError(f'QEMU 未能启动，请检查 {root/"jazzy/qemu.log"}')
-        time.sleep(0.5)
+    def configure(pid):
+        if config.get('performance_cores', True):
+            try:
+                from host_scheduling import apply
+                write_json(root/'jazzy/host-scheduling.json', apply(pid))
+            except (OSError, AttributeError) as error:
+                print('进程调度未调整，保留系统默认：', error, flush=True)
+    startup.spawn(args, root/'jazzy', config['qmp_port'], 'Go2 Desktop ROS2 Jazzy CHAMP', progress, configure)
     print('虚拟机已启动；首次安装时请等待 Ubuntu 自动安装。', flush=True)
 
+def wait_for_graphics(config, progress=None, cancel_event=None, timeout=180):
+    deadline = time.monotonic()+timeout
+    root = Path(config['runtime'])/'jazzy'
+    while time.monotonic() < deadline:
+        if cancel_event is not None and cancel_event.is_set():
+            return '启动检查已取消。'
+        try:
+            result = remote(config, 'if test -f /var/lib/robot-dog-jazzy/setup.complete; then DISPLAY=:0 glxinfo -B; '
+                            'elif test -f /var/lib/robot-dog-jazzy/setup.failed && '
+                            '{ test ! -f /var/lib/robot-dog-jazzy/setup.started || '
+                            'test /var/lib/robot-dog-jazzy/setup.failed -nt /var/lib/robot-dog-jazzy/setup.started; }; '
+                            'then echo SETUP_FAILED; else echo SETUP_PENDING; fi', timeout=12)
+            if result.returncode == 0 and 'SETUP_FAILED' in result.stdout:
+                raise RuntimeError('Ubuntu 首次安装失败，请查看安装日志，不要重建磁盘。')
+            if result.returncode == 0 and 'SETUP_PENDING' in result.stdout:
+                startup.record(root, 'installing', message='Ubuntu 已响应，首次安装仍在进行。')
+                return 'Ubuntu 已响应，首次安装仍在进行；请在首次部署窗口继续查看安装进度。'
+            renderer = next((line.split(':',1)[1].strip() for line in result.stdout.splitlines()
+                             if line.startswith('OpenGL renderer string:')), '')
+            if result.returncode == 0 and renderer:
+                accelerated = 'Accelerated: yes' in result.stdout
+                startup.record(root, 'graphics_ready', renderer=renderer, accelerated=accelerated)
+                return 'Ubuntu 图形服务已响应。实际渲染器：'+renderer+'。等待关节 12/12、机器狗站稳后操作。'
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+        if progress:
+            progress('虚拟机已运行，正在等待 Ubuntu 图形桌面响应……')
+        if cancel_event is None:
+            time.sleep(3)
+        else:
+            cancel_event.wait(3)
+    try:
+        state = qmp(config, 'query-status')['return']
+        detail = 'QEMU 监控仍响应，Ubuntu 图形桌面尚未就绪：'+str(state)
+    except (OSError, ValueError, RuntimeError):
+        detail = 'QEMU 监控也未响应，疑似虚拟机或显示层卡住。'
+    startup.record(root, 'graphics_timeout', detail=detail)
+    raise TimeoutError(detail+' 已保留启动日志，请勿反复强制启动。')
+
 def shutdown(config):
+    with startup.operation_lock(Path(config['runtime'])/'jazzy'):
+        return _shutdown(config)
+
+def _shutdown(config):
+    if not port_open(config['qmp_port']):
+        assert_offline(config)
+        return
     # Ask ROS launch to finish before powering down, limiting desktop shutdown delays.
     script = '''python3 - <<'PY'
 import os, signal, subprocess, time
@@ -96,10 +124,13 @@ for row in rows:
         except ProcessLookupError: pass
 time.sleep(7)
 PY
-sudo -n systemctl poweroff'''
-    result = remote(config, script, timeout=25)
-    if result.returncode not in (0, 255):
-        raise RuntimeError('Ubuntu 未接受正常关机请求：'+result.stderr[-500:])
+sudo -n systemctl --no-block poweroff'''
+    try:
+        result = remote(config, script, timeout=25)
+        if result.returncode not in (0, 255):
+            raise RuntimeError('Ubuntu 未接受正常关机请求：'+result.stderr[-500:])
+    except subprocess.TimeoutExpired:
+        pass
     deadline = time.monotonic()+180
     while time.monotonic() < deadline:
         if not port_open(config['qmp_port']):
