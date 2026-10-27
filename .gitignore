@@ -9,6 +9,8 @@ id_ed25519
 .env
 .env.local
 RobotDogRuntime/
+.robotdog-desktop.local.json
+RobotDogDesktopRuntime/
 
 # Local caches and generated build output.
 __pycache__/

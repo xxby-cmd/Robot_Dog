@@ -1,0 +1,51 @@
+虚拟机性能优化记录
+日期：2026-10-27；状态：工程自测通过，待用户体验验收。
+
+本轮原因与范围
+用户反馈画面慢、操作卡顿后，继续处理现有行走任务的性能问题。
+本次最初实测渲染器为 Intel 核显，NVIDIA 显存占用仅约 8MiB；虽然原有每应用高性能偏好仍在，不能把这个偏好当作每次都实际用上独显的证据。
+GTK 日志有 GtkGLArea console lacks DMABUF support 提示；该提示本身不能证明全部卡顿来源。
+宿主机有内存余量，来宾 12GB 内存大部分空闲，因此没有继续堆加内存。
+
+已经固化的调整
+1. QEMU 默认显示从 GTK 改为 SDL OpenGL，仍使用 VirtIO/VirGL。多次 SDL 启动均在来宾 glxinfo 中核对到 RTX 4060、Accelerated=yes。
+2. 保留 8 个虚拟 CPU 和 12288MiB 内存。通过 Windows 官方 CPU Set API 识别大小核，将这个 QEMU 进程限制在性能核心对应的逻辑 CPU 0～15，并设为 AboveNormal 优先级。
+   这些核心仍与 Windows 其他进程共享，不是独占分配；没有修改全局调度、电源计划或其他应用配置。
+3. 关闭来宾 XFCE 桌面合成，观察相机 anti_aliasing=0，来宾桌面 1280×768。
+   1280×720 不在本机虚拟屏幕支持的模式中，已改为实际支持并验证的 1280×768。
+4. 启动器自动应用新配置，仍使用原桌面“Go2行走仿真（ROS2）”及项目“运行Go2行走仿真.cmd”。
+
+实测结果
+相同 Go2 场景静止站立、每次约 10 秒的观察采样：
+  SDL、兼容 CPU、未限制性能核心：实时因子 0.258。
+  SDL、兼容 CPU、性能核心与 AboveNormal：实时因子 0.567。
+  同上但临时只让 4 个来宾 CPU 在线：实时因子 0.529；随后恢复 8 个在线。
+  新默认配置重新启动后的短测：实时因子 0.566，机身高度约 0.240m，站立正常。
+上述是本轮短时观察，不是严格控制全部宿主机负载的性能基准，不能保证任意时刻都有约 2.2 倍提升。
+历史运动测试曾出现 0.45～0.76，说明性能会随窗口状态、负载和场景变化；本轮不是对历史最好成绩的超越。
+
+新配置下完整运动复测：PASS。
+  36.04 仿真秒使用 63.00 现实秒，平均实时因子 0.572。
+  前进 0.720m、后退 0.419m；左转 1.122rad、右转 -0.914rad。
+  停止与指令中断自动停止均通过，12 个关节正常，未侧翻。
+  物理步长仍为 0.001s，关节控制器仍为 250Hz，CHAMP 控制代码、碰撞与运动模型保持原样。
+  Gazebo 真值仅用于评价运动，没有用真值替代定位或控制。
+  简单 glxgears 基准约 40～44FPS；它不等于 Gazebo 实际画面帧率，本轮未宣称 Gazebo 达到该帧率。
+
+回退与限制
+完整 CPU 特性透传试启动出现 WHPX Unexpected VP exit code 4、虚拟 CPU 暂停；已通过 QMP 正常退出该试验实例，并撤回此启动选项，最终验证使用兼容 CPU 模型。
+优化没有把物理仿真提高到持续实时，操作是否足够流畅仍需用户体验确认。以后若仍需明显提高性能，应先讨论运行环境的取舍，不自行迁移平台。
+本轮正常关机成功；仍保留关机偶尔较慢的历史提示，不宣称已完成长期退出可靠性验证。
+eNSP、VirtualBox、旧 Noetic 环境和 Windows 虚拟化/安全设置保持原样。没有开始 SLAM 等下一项功能任务。
+
+证据与维护
+完整 JSON、遥测 CSV、启动参数和界面截图位于 baseline\go2_jazzy\verification\performance。
+host_scheduling.py 负责每个新 QEMU 进程的调度；进程退出后该次设置自然结束。
+measure_performance.py 只观察仿真时钟、机身状态和进程 CPU，不发运动或位姿指令。
+需要诊断回退时，vm.py start --display-backend gtk --no-performance-cores 可启动旧显示/调度组合；必须先正常结束当前实例。
+当前已安装来宾配置已更新；如要重建空白系统，请在正常关机并确认 QEMU 退出后，先运行 make_seed.py 重新制作包含最新脚本的安装介质。
+
+参考
+QEMU 图形前端按键：https://www.qemu.org/docs/master/system/keys.html
+Windows CPU Set 信息：https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-system_cpu_set_information
+Gazebo MinimalScene 配置源码：https://github.com/gazebosim/gz-gui/blob/gz-gui8/src/plugins/minimal_scene/MinimalScene.cc

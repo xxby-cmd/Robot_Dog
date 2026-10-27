@@ -20,6 +20,8 @@ verify_walking.py 只发速度指令，检查真实仿真位移、姿态、关�
 
 资源与图形：
 vm.py 将新虚拟机设为 8 vCPU、12288MiB 内存。
+后续优化默认使用 SDL OpenGL；host_scheduling.py 仅为新 QEMU 进程设置性能核心亲和性及 AboveNormal，来宾 1280×768，桌面合成关闭，观察画面抗锯齿为 0。
+最新性能与运动证据位于 verification\performance；完整 CPU 透传试验不兼容，默认保留原兼容 CPU 配置。
 独立可执行文件 E:\RobotDogRuntime\qemu\qemu-go2-jazzy.exe 与原 QEMU 位于同目录，用于隔离 Windows 的每应用 GPU 偏好。
 仅对这个可执行文件设置 HKCU\Software\Microsoft\DirectX\UserGpuPreferences 的 GpuPreference=2;。
 原值备份位于 E:\RobotDogRuntime\jazzy\gpu-preference-backup.json。原 QEMU、eNSP 和 VirtualBox 的图形偏好未变。

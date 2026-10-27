@@ -31,11 +31,15 @@ publisher = node.create_publisher(Twist, '/cmd_vel', 10)
 controller_client = node.create_client(ListControllers, '/controller_manager/list_controllers')
 root = tk.Tk()
 root.title('Go2 行走控制 · ROS2 CHAMP')
-root.geometry('410x580+10+35')
+root.geometry('410x610+10+35')
 root.attributes('-topmost', True)
 root.configure(bg='#f5f7fa')
 status = tk.StringVar(value='准备启动行走仿真。')
 sensor_status = tk.StringVar(value='等待关节与 IMU 数据……')
+gpu_status = tk.StringVar(value='显卡：等待实际检测')
+gpu_verified = False
+gpu_checking = False
+gpu_attempts = 0
 process = None
 stopping = False
 target = (0.0, 0.0)
@@ -97,17 +101,54 @@ def move(forward, turn):
     status.set('按住移动，松开停止。空格也可停止。')
 
 def start():
-    global process
+    global process, gpu_checking, gpu_attempts
     if stopping:
         return
     if process is not None and process.poll() is None:
         status.set('仿真正在运行。等待机器狗站稳后，按住方向按钮。')
+        return
+    if not gpu_verified:
+        if gpu_checking:
+            return
+        gpu_checking = True
+        gpu_attempts += 1
+        status.set('正在核对实际渲染显卡……')
+        def check():
+            try:
+                result = subprocess.run(['glxinfo', '-B'], capture_output=True, text=True, timeout=10)
+                renderer = next((line.split(':',1)[1].strip() for line in result.stdout.splitlines()
+                                 if line.startswith('OpenGL renderer string:')), '')
+                valid = result.returncode == 0 and 'NVIDIA' in renderer and 'RTX 4060' in renderer and 'Accelerated: yes' in result.stdout
+            except (OSError, subprocess.SubprocessError):
+                renderer, valid = '', False
+            root.after(0, lambda: gpu_checked(renderer, valid))
+        threading.Thread(target=check, daemon=True).start()
         return
     log = log_path.open('a')
     process = subprocess.Popen(['/home/robot/bin/start-simulation.sh'], stdout=log,
                                stderr=subprocess.STDOUT, start_new_session=True)
     log.close()
     status.set('正在加载 Go2、物理场景和 CHAMP 控制器……')
+
+def gpu_checked(renderer, valid):
+    global gpu_verified, gpu_checking
+    gpu_checking = False
+    gpu_verified = valid
+    if valid:
+        gpu_status.set('显卡：RTX 4060（实际渲染已核对）')
+        start()
+    else:
+        if not renderer:
+            gpu_status.set('显卡：等待图形服务响应')
+            if gpu_attempts < 6:
+                status.set('图形服务尚未就绪，稍后自动重新核对……')
+                root.after(2000, start)
+            else:
+                status.set('显卡检测超时，请稍候再点击“启动仿真”。')
+            return
+        gpu_status.set('显卡：未通过独显核对')
+        status.set('未检测到 RTX 4060。请在 Windows 启动器中安全关闭并重新启动虚拟机。'+
+                   ('当前为 Intel 核显。' if 'Intel' in renderer else ''))
 
 def stop():
     global stopping
@@ -150,6 +191,7 @@ def focus_robot():
 
 tk.Label(root, text='Go2 行走控制', font=('Noto Sans CJK SC', 19, 'bold'), bg='#f5f7fa').pack(pady=(15, 3))
 tk.Label(root, text='ROS2 Jazzy · Gazebo Harmonic · CHAMP', bg='#f5f7fa').pack(pady=(0, 12))
+tk.Label(root, textvariable=gpu_status, bg='#f5f7fa', fg='#526071').pack(pady=(0, 4))
 tk.Button(root, text='启动仿真', command=start, width=26, pady=6).pack(pady=4)
 pad = tk.Frame(root, bg='#f5f7fa')
 pad.pack(pady=10)

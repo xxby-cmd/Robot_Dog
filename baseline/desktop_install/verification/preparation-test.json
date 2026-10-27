@@ -1,0 +1,17 @@
+{
+  "result": "PASS",
+  "scope": "Isolated Windows preparation only; no VM boot or target desktop motion claim",
+  "assets_sha256_verified": 4,
+  "qemu_portable_extraction": true,
+  "independent_qcow2_virtual_gib": 60,
+  "offline_disk_check": "PASS",
+  "fresh_local_key_pair": true,
+  "seed_reopened_and_checked": true,
+  "guest_script_lf": true,
+  "retry_started_marker_present": true,
+  "repeat_install_preserved_existing_disk": true,
+  "new_vm_boot_tested": false,
+  "target_desktop_tested": false,
+  "seed_built_from_immutable_git_snapshot": true,
+  "repository_dependencies_present": true
+}

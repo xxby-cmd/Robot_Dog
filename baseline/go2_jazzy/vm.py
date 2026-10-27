@@ -1,6 +1,7 @@
 """Operate only the separate Jazzy VM; the previous VM stays independent."""
 from pathlib import Path
 import argparse
+from datetime import datetime, timezone
 import json
 import socket
 import subprocess
@@ -28,6 +29,9 @@ def qmp(command, arguments=None):
         return result
 
 def start(headless=False, display_backend='sdl', performance_cores=True):
+    if not headless:
+        from gpu_policy import ensure
+        ensure()
     try:
         with socket.create_connection(('127.0.0.1', 2266), timeout=1):
             print('Jazzy VM is already running')
@@ -42,6 +46,7 @@ def start(headless=False, display_backend='sdl', performance_cores=True):
             '-serial', f'file:{ROOT / "serial.log"}', '-qmp', 'tcp:127.0.0.1:2266,server=on,wait=off', '-rtc', 'base=utc']
     args += ['-device', 'virtio-vga', '-display', 'none'] if headless else ['-device', 'virtio-vga-gl', '-display', f'{display_backend},gl=on']
     (ROOT / 'vm-command.json').write_text(json.dumps(args, indent=2))
+    (ROOT/'gpu-status.json').write_text(json.dumps({'status':'pending', 'checked_at':None}))
     with (ROOT / 'qemu.log').open('a') as log:
         process = subprocess.Popen(args, cwd=QEMU.parent, stdout=log, stderr=subprocess.STDOUT,
                                    creationflags=subprocess.CREATE_NO_WINDOW)
@@ -50,6 +55,44 @@ def start(headless=False, display_backend='sdl', performance_cores=True):
         result = apply(process.pid)
         (ROOT/'host-scheduling.json').write_text(json.dumps(result, indent=2))
     print('Jazzy VM started')
+
+def check_gpu():
+    try:
+        result = subprocess.run(SSH+['DISPLAY=:0 glxinfo -B'], capture_output=True, text=True,
+                                errors='replace', timeout=20, creationflags=subprocess.CREATE_NO_WINDOW)
+    except subprocess.TimeoutExpired:
+        report = {'status':'pending', 'renderer':'', 'accelerated':False,
+                  'checked_at':datetime.now(timezone.utc).isoformat(), 'detail':'GPU query timed out'}
+        (ROOT/'gpu-status.json').write_text(json.dumps(report, indent=2))
+        return report
+    renderer = next((line.split(':',1)[1].strip() for line in result.stdout.splitlines()
+                     if line.startswith('OpenGL renderer string:')), '')
+    accelerated = 'Accelerated: yes' in result.stdout
+    status = 'pending' if result.returncode or not renderer else (
+        'pass' if 'NVIDIA' in renderer and 'RTX 4060' in renderer and accelerated else 'fail')
+    report = {'status':status, 'renderer':renderer, 'accelerated':accelerated,
+              'checked_at':datetime.now(timezone.utc).isoformat()}
+    if status == 'pending':
+        report['detail'] = result.stderr.strip()[-300:]
+    (ROOT/'gpu-status.json').write_text(json.dumps(report, indent=2))
+    return report
+
+def wait_for_gpu(timeout=150, cancel_event=None):
+    deadline = time.monotonic()+timeout
+    while time.monotonic() < deadline:
+        if cancel_event is not None and cancel_event.is_set():
+            raise RuntimeError('GPU verification cancelled')
+        try:
+            report = check_gpu()
+            if report['status'] != 'pending':
+                return report
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+        if cancel_event is None:
+            time.sleep(3)
+        else:
+            cancel_event.wait(3)
+    raise TimeoutError('Ubuntu graphical session is not ready for GPU verification')
 
 def shutdown():
     result = subprocess.run(SSH + ['sudo -n systemctl poweroff'], timeout=15,
@@ -69,7 +112,7 @@ def shutdown():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['start', 'status', 'shutdown', 'exec', 'upload', 'download'])
+    parser.add_argument('action', choices=['start', 'status', 'shutdown', 'gpu', 'exec', 'upload', 'download'])
     parser.add_argument('arguments', nargs='*')
     parser.add_argument('--headless', action='store_true')
     parser.add_argument('--display-backend', choices=['gtk', 'sdl'], default='sdl')
@@ -81,6 +124,8 @@ def main():
         print(qmp('query-status'))
     elif args.action == 'shutdown':
         shutdown()
+    elif args.action == 'gpu':
+        print(json.dumps(check_gpu(), indent=2))
     elif args.action == 'exec':
         raise SystemExit(subprocess.run(SSH + [' '.join(args.arguments)]).returncode)
     elif args.action in ('upload', 'download'):

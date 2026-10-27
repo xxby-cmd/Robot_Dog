@@ -1,0 +1,22 @@
+{
+  "qemu": {
+    "status": 200,
+    "content_length": "206615928",
+    "url": "https://qemu.weilnetz.de/w64/qemu-w64-setup-20260811.exe"
+  },
+  "ubuntu": {
+    "status": 200,
+    "content_length": "621284352",
+    "url": "https://cloud-images.ubuntu.com/noble/20261017/noble-server-cloudimg-amd64.img"
+  },
+  "sevenzip": {
+    "status": 200,
+    "content_length": "2008576",
+    "url": "https://github.com/ip7z/7zip/releases/download/26.05/7z2605-x64.msi"
+  },
+  "pycdlib": {
+    "status": 200,
+    "content_length": "238118",
+    "url": "https://files.pythonhosted.org/packages/7c/64/5a5912a3f3ba47dba3eb7f707e51f91926b26be4bde25fe2da483f3c4a9b/pycdlib-1.22.0-py3-none-any.whl"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "status": "pass",
+  "renderer": "virgl (NVIDIA GeForce RTX 4060 Laptop GPU/PCIe/SSE2)",
+  "accelerated": true,
+  "checked_at": "2026-10-27T11:15:37.978979+00:00"
+}

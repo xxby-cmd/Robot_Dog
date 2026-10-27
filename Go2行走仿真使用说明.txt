@@ -1,5 +1,6 @@
 Go2 行走仿真使用说明
 阶段：Baseline 第一项——行走控制接入
+新电脑请先读 新机部署说明.txt：使用 首次部署机器狗.cmd 和 运行本机部署机器狗.cmd，不要求笔记本盘符或旧私钥。以下保留笔记本原环境操作说明。
 
 一、启动
 双击桌面“Go2行走仿真（ROS2）”，再点击“启动 Go2 行走环境”。
@@ -39,7 +40,9 @@ Windows 启动器与 Ubuntu 行走面板是本次编写的便捷界面；物理�
 项目代码：E:\机器狗算法应用开发\baseline\go2_jazzy
 新运行环境：E:\RobotDogRuntime\jazzy
 当前使用的虚拟磁盘：E:\RobotDogRuntime\jazzy\robot-dog-clean.qcow2
-资源：8 个虚拟 CPU、12GB 内存；图形后端为 GTK / VirtIO-VirGL。
+资源：8 个虚拟 CPU、12GB 内存；图形后端为 SDL / VirtIO-VirGL。
+已启用性能核心调度，Ubuntu 桌面为 1280×768，关闭桌面合成和观察画面抗锯齿。
+鼠标或键盘被虚拟机捕获时，按 Ctrl＋Alt＋G 释放。
 已在 Ubuntu 内核对渲染器为 NVIDIA GeForce RTX 4060 Laptop GPU，经 VirGL 使用。
 这属于虚拟图形加速，没有进行 GPU 直通，也没有为虚拟机独占分配显存。
 旧版“运行机器狗.cmd”和原 ROS Noetic 环境保留；eNSP、VirtualBox 及 Windows 虚拟化/安全设置未更改。

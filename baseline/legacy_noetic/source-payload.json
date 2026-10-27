@@ -1,0 +1,13 @@
+{
+  "source_archive": "baseline/legacy_noetic/runtime/payload/unitree-baseline.tar.gz",
+  "sha256": "377db961e8d259d6ced3bff713c911e78810b5147fdb26a0a8d000ba639656d3",
+  "members": 92,
+  "packages": [
+    "go2_description",
+    "unitree_controller",
+    "unitree_gazebo",
+    "unitree_legged_control",
+    "unitree_legged_msgs"
+  ],
+  "role": "Historical tested Noetic source payload; not an installed VM or private key"
+}

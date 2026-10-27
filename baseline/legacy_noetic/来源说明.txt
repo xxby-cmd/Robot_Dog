@@ -10,3 +10,6 @@ payload\ros.key 是原 ROS 软件源的公共验签密钥，不是 SSH 私钥。
 未归档虚拟磁盘、安装介质、QEMU 二进制、运行日志、SSH 私钥或包含本机授权信息的生成后 cloud-user-data。
 旧入口仍是项目根目录 运行机器狗.cmd，指向独立运行目录中的 launch_vm.py。
 当前推荐接手的新环境位于 baseline\go2_jazzy；不要把旧环境的站立验收当作新环境的行走验收。
+source\unitree_legged_msgs 同时归档旧环境使用的消息定义；verification 保存旧站立阶段的环境与结果。
+新电脑优先使用 baseline\desktop_install 的公开依赖重建入口，不需要先恢复旧 Noetic 系统。
+原已验证 Noetic 源码包也随 runtime\payload\unitree-baseline.tar.gz 归档，校验信息见 source-payload.json；它不是系统运行盘。

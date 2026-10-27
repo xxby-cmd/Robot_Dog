@@ -1,0 +1,44 @@
+{
+  "verified_at": "2026-10-27T14:34:52.803428+08:00",
+  "runtime": "QEMU 11.1.0 portable with WHPX and SDL/VirGL graphics",
+  "guest": "Ubuntu 20.04.6 LTS; ROS Noetic; Gazebo 11.15.1",
+  "resources": {
+    "cpu_cores": 4,
+    "ram_mib": 6144,
+    "virtual_disk_gib": 50
+  },
+  "launcher": "E:\\机器狗算法应用开发\\运行机器狗.cmd",
+  "desktop_shortcut": "C:\\Users\\XXBY\\Desktop\\机器狗仿真.lnk",
+  "verification": {
+    "joint_controllers_running": 12,
+    "joint_state_count": 12,
+    "imu_received": true,
+    "standing_height_m": 0.3389083014226998,
+    "height_change_m": 5.1091613080700427e-05,
+    "simulation_time_advances": true,
+    "result": "PASS"
+  },
+  "tested": [
+    "full Go2 visual model",
+    "12 joint controllers",
+    "joint state messages",
+    "IMU messages",
+    "stable stand",
+    "GUI stop/start",
+    "GUI safe power-off",
+    "cold boot and automatic simulation startup"
+  ],
+  "scope": "Simulation and standing controller. SLAM, YOLO, autonomous navigation and walking policy are not integrated.",
+  "host_changes": "No eNSP/VirtualBox upgrade or host virtualization/security configuration change. Standalone runtime, shortcut, and project simulation fixes only.",
+  "display_note": "Normal window startup is required; double-click title bar to maximize after boot.",
+  "source_fixes": [
+    "Go2 robot.xacro points to existing meshes/base.dae",
+    "clamp functions return their clamped value"
+  ],
+  "sources": [
+    "https://www.qemu.org/download/",
+    "https://qemu.weilnetz.de/w64/",
+    "https://cloud-images.ubuntu.com/focal/current/",
+    "https://github.com/unitreerobotics/unitree_ros_to_real"
+  ]
+}

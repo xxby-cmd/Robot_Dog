@@ -1,0 +1,31 @@
+{
+  "qemu": {
+    "filename": "qemu-w64-setup-20260811.exe",
+    "url": "https://qemu.weilnetz.de/w64/qemu-w64-setup-20260811.exe",
+    "sha256": "f98a8aeb5f7faea9765b6dee28316c266cd179d80354a2fed8e50176f9a2e59f",
+    "sha512": "5bcf9eed634e8575a37b74f445af41a2fe4106da512d0c30c368301d4c105037fdfab40a5287367a28a957624cddebbc8c07e16c88ab6634f554cdf3d16bf543",
+    "checksum_source": "https://qemu.weilnetz.de/w64/qemu-w64-setup-20260811.sha512",
+    "version": "11.1.0"
+  },
+  "ubuntu": {
+    "filename": "noble-server-cloudimg-amd64.img",
+    "url": "https://cloud-images.ubuntu.com/noble/20261017/noble-server-cloudimg-amd64.img",
+    "sha256": "04e8f2461a16a44e78a370284471f29616cdd9baf1893df25807b71f985b6c94",
+    "checksum_source": "https://cloud-images.ubuntu.com/noble/20261017/SHA256SUMS",
+    "version": "Ubuntu 24.04, build 20261017"
+  },
+  "sevenzip": {
+    "filename": "7z2605-x64.msi",
+    "url": "https://github.com/ip7z/7zip/releases/download/26.05/7z2605-x64.msi",
+    "sha256": "3fe4ab99fa15629c652944309a2b2bc6e41fc933fc6b63f5df1ebcf3aea68263",
+    "checksum_source": "SHA256 of the official HTTPS asset downloaded on 2026-10-27",
+    "version": "26.05; extracted as a private portable tool, never installed by MSI"
+  },
+  "pycdlib": {
+    "filename": "pycdlib-1.22.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/7c/64/5a5912a3f3ba47dba3eb7f707e51f91926b26be4bde25fe2da483f3c4a9b/pycdlib-1.22.0-py3-none-any.whl",
+    "sha256": "bfa0b3631345a14b2741fe088398b6b8dc2838442ea607fd07d027dcc67b9e94",
+    "checksum_source": "https://pypi.org/pypi/pycdlib/1.22.0/json",
+    "version": "1.22.0; imported locally, without global pip installation"
+  }
+}
