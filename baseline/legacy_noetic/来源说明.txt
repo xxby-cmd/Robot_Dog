@@ -1,0 +1,12 @@
+原 Noetic 运行工具源码归档
+
+来源：笔记本 E:\RobotDogRuntime 的既有脚本与 payload 文本文件。
+用途：随 Git 保存旧 Ubuntu 20.04 / ROS Noetic / Gazebo 11 环境的工程进度。
+runtime 下文件原本放在 E:\RobotDogRuntime 根目录，runtime\payload 下文件原本在其 payload 子目录。
+这些脚本通过自身目录定位运行文件；不要直接在归档目录启动旧虚拟机。
+
+归档包含启动器、种子介质生成、自测、下载工具、Ubuntu 面板、场景与安装脚本。
+payload\ros.key 是原 ROS 软件源的公共验签密钥，不是 SSH 私钥。
+未归档虚拟磁盘、安装介质、QEMU 二进制、运行日志、SSH 私钥或包含本机授权信息的生成后 cloud-user-data。
+旧入口仍是项目根目录 运行机器狗.cmd，指向独立运行目录中的 launch_vm.py。
+当前推荐接手的新环境位于 baseline\go2_jazzy；不要把旧环境的站立验收当作新环境的行走验收。

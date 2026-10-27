@@ -1,0 +1,8 @@
+# Preserve Linux launch scripts when cloning from Windows.
+baseline/** text=auto eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.png binary
+*.dae -text
+*.stl -text
+*.STL -text

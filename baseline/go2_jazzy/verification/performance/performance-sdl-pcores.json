@@ -1,0 +1,52 @@
+{
+  "label": "sdl-pcores",
+  "wall_seconds": 10.010228600000005,
+  "simulation_seconds": 5.680000000000001,
+  "real_time_factor": 0.5674196091785554,
+  "top_cpu_processes": [
+    {
+      "pid": "1454",
+      "name": "ruby",
+      "cpu_percent_one_core": 163.4
+    },
+    {
+      "pid": "1365",
+      "name": "parameter_bridg",
+      "cpu_percent_one_core": 39.5
+    },
+    {
+      "pid": "904",
+      "name": "Xorg",
+      "cpu_percent_one_core": 26.1
+    },
+    {
+      "pid": "1455",
+      "name": "ruby",
+      "cpu_percent_one_core": 21.0
+    },
+    {
+      "pid": "1366",
+      "name": "quadruped_contr",
+      "cpu_percent_one_core": 10.7
+    },
+    {
+      "pid": "1362",
+      "name": "robot_state_pub",
+      "cpu_percent_one_core": 10.6
+    },
+    {
+      "pid": "1254",
+      "name": "python3",
+      "cpu_percent_one_core": 6.9
+    },
+    {
+      "pid": "1197",
+      "name": "python3",
+      "cpu_percent_one_core": 4.3
+    }
+  ],
+  "body_height_m": 0.24004648426652955,
+  "roll_rad": -0.0023502018034346275,
+  "pitch_rad": -0.003321152860676757,
+  "measurement_only": true
+}

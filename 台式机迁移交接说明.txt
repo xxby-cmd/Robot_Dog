@@ -1,0 +1,118 @@
+机器狗 Baseline：台式机迁移与继续工作交接
+日期：2026-10-27
+用途：交给台式机上的 Codex，恢复工程背景、迁移现有成果，并继续解决运行卡顿。
+说明：这是交接时的快照。主对话仍可能修改性能相关代码，迁移前应取得最终文件版本。
+Git 交接目标：仓库 https://github.com/xxby-cmd/Robot_Dog ，分支 codex/desktop-handoff-20261027；是否已推送以远端分支实际存在为准。
+本侧会话仅生成交接文档，没有操作虚拟机，也没有确认此刻虚拟机是否已关闭。
+
+一、已确认的目标与约定
+confirmed：按《创新实践课程选题介绍.docx》课题 12，先复现 Baseline，再研究原理，再讨论创新。
+confirmed：近期只做纯仿真、Gazebo＋一种 SLAM；暂不接真实 Go2，不扩展 Unity 或双 SLAM。
+confirmed：下一次汇报为 2026-11-04，展示实际进度，不承诺完整系统届时完成。
+confirmed：Codex 负责工程搭建和调试；关键技术路线双方决定；成果由用户验收。
+confirmed：一次推进一项任务；自测通过不等于用户验收；验收前不进入下一项功能。
+confirmed：保留 eNSP、VirtualBox 和旧机器狗环境；涉及 Windows 虚拟化/安全设置的变更须先询问。
+完整规则以项目 AGENTS.md 为准；迁移电脑不等于授权更换 ROS、控制方案或验收范围。
+
+二、整体进度
+旧起点：QEMU＋Ubuntu 20.04＋ROS Noetic＋Gazebo 11，已验证 Go2 模型、12 个关节、IMU 和站立。
+用户在比较后选择新建独立 Ubuntu 24.04＋ROS2 Jazzy＋Gazebo Harmonic＋CHAMP 环境。
+新环境第一项“行走控制接入”已经完成运动自测，状态仍是“自测通过待用户验收”。
+已实现前进、后退、左右转、停止、指令中断后自动停止，以及图形启动和行走面板。
+尚未完成：激光/相机/定位里程计链路验收、SLAM、YOLOv10、导航、避障和 Frontier 自主探索。
+下载了算法源码、看见模型、站立或能遥控行走，都不能表述为整个 Baseline 已完成。
+
+三、接手时的首要任务
+用户最新反馈：笔记本虚拟机渲染很慢、很卡，希望改善，并准备换台式机使用。
+优先清点台式机现有项目和虚拟机；用户记得台式机可能已有能看见机器狗的旧环境。
+不要覆盖台式机已有的同名目录或磁盘，先比较版本、确认哪套需要保留，再安排独立位置。
+迁移并改善显示/运行性能后，重新做行走验收；本交接不代表允许提前进入 SLAM 等下一任务。
+
+四、已经完成的工程与来源
+上游社区工程：https://github.com/khaledgabr77/unitree_go2_ros2
+锁定提交：55ff151632a0220bf3ae0c0772392615d86da7a8。
+六个源码包已编译，版本与本地修复记录在 baseline\go2_jazzy\upstream.json。
+控制链：面板 /cmd_vel → CHAMP 步态和逆运动学 → 关节轨迹 → ros2_control 力矩控制 → Gazebo 物理运动。
+本地增加依赖修复、可选传感器引用修正、世界 IMU 插件、启动协调、速度边界和 500ms 指令看门狗。
+启动时先暂停世界，配置控制器，再协调激活与开始物理计算，避免加载期间先下落侧翻。
+Windows 启动器和 Ubuntu 控制面板是本项目编写的便捷界面；模型、CHAMP 和 Gazebo 不是原创成果。
+当前 CHAMP 不依靠 SLAM 定位闭环；低层关节控制使用关节反馈。
+
+五、已验证结果及其边界
+confirmed：图形环境下四方向自测 PASS，12 个关节，测试期间无侧翻。
+前进：0.15m/s 指令持续 5 仿真秒，实际前向位移约 0.741m。
+后退：-0.12m/s 指令持续 3 仿真秒，实际后向位移约 0.461m。
+左转约 70.7°，右转约 58.3°；停止和速度指令中断自动停止通过。
+两次图形测试平均实时因子约 0.760 和 0.451；它是仿真时间/现实时间，不是画面帧率。
+测量使用 Gazebo 物理真值，仅用于评价实际运动；不设置机器人位姿，不作为定位或 SLAM 完成依据。
+这些结果只支持平地、低速遥控演示，仍有位移/航向误差，不能视为自主导航通过。
+证据：baseline\go2_jazzy\verification\walking-verification-final.json、walking-telemetry-final.csv 和截图。
+
+六、性能排查的最新停点
+confirmed：笔记本主机为 i9-14900HX、32GB 内存、Intel 核显＋RTX 4060 Laptop GPU。
+confirmed：新虚拟机配置为 8 vCPU、12288MiB 内存；某次采样内存余量充足。
+confirmed：曾在 Ubuntu 内确认 VirGL 实际使用 RTX 4060，但后续一次启动实际又使用 Intel 核显。
+confirmed：仅写入新 QEMU 专用程序的 Windows 每应用高性能显卡偏好，不能保证每次独显都生效。
+confirmed：后续一次采样 Xorg 桌面显示进程占用偏高；此时采样没有 Gazebo 主进程。
+inferred：可能同时存在虚拟机桌面/图形传输开销和物理仿真开销，不能把所有卡顿归因于内存不足。
+needs check：台式机上的实际 OpenGL 渲染器、宿主机 CPU/GPU 占用、桌面流畅度、物理实时因子。
+needs check：GTK 与 SDL 显示后端的对比、XFCE 桌面合成特效的影响；没有确认优化方案最终通过。
+vm.py 已有 --display-backend gtk/sdl 参数，后续还加入进程调度和性能测量工具；当前默认值以代码为准，这些改动尚未完成验收。
+不要直接套用笔记本的 GPU 名称、偏好备份或性能数据到台式机；应按台式机硬件重新核对。
+
+七、要搬运哪些文件
+最省心：完整保留 E:\机器狗算法应用开发 和 E:\RobotDogRuntime 两个目录，并带上隐藏的 .git。
+仅复制交接文件或只执行 git clone/pull 不够：交接分支保存代码与进度，但运行盘、QEMU 和 SSH 私钥仍须另行迁移。
+如果只搬新 Jazzy 环境，最小运行集合为：
+  1. 项目目录，至少包括 AGENTS.md、baseline\go2_jazzy、运行Go2行走仿真.cmd 和说明/验证记录。
+  2. E:\RobotDogRuntime\qemu 整个文件夹，包含 QEMU 程序、DLL 和数据文件，不能只复制一个 exe。
+  3. E:\RobotDogRuntime\jazzy\robot-dog-clean.qcow2：本次有效、已安装系统的运行盘。
+  4. E:\RobotDogRuntime\jazzy\robot-dog-seed.iso：启动配置仍挂载此介质。
+  5. E:\RobotDogRuntime\robot_vm_key 和 robot_vm_key.pub：现有本机 SSH 连接所用密钥。
+  6. 建议同时保留 jazzy 下源码归档、版本信息、验证结果，以及父目录 python-packages 和 payload\ros.key，便于重建。
+密钥只在用户自己的电脑/存储介质间迁移，不粘贴私钥内容，不提交 Git。
+本次 clean 盘由恢复后的运行盘导出为独立盘；台式机启动前可在完全离线状态核对是否存在 backing file。
+其他新盘文件 robot-dog.qcow2、robot-dog-before-snapshot-repair.qcow2、robot-dog-recovery-work.qcow2 仅供恢复追溯，不用于启动。
+源码目录内的 Robot_Dog.vdi 只有约 2MB，未核实为可独立启动磁盘，不要误当成本次有效运行盘。
+
+八、拷盘前必须注意的实际问题
+曾因 QEMU 尚未完全退出便操作内部快照，损坏新盘快照元数据；已在副本恢复并导出 clean 盘。
+clean 盘曾离线检查无错误，并成功启动和完成上述运动测试；失败盘及恢复备份仍保留在源机。
+不要再次对运行中的磁盘执行快照、修复、转换、复制或磁盘一致性检查。
+先正常关闭 Ubuntu，确认 QEMU 进程完全消失，再复制磁盘；旧文档“当时已关闭”不等于现在已关闭。
+关机偶尔较慢，启动器可能先报超时；退出可靠性排查尚未完成，不要因此立即强制结束进程。
+复制完成后可离线比较源/目标磁盘 SHA256；本次生成文档没有执行大盘复制或计算校验值。
+恢复备份与大日志可留在源机，不属于新环境最小运行集合；不要为腾空间直接删除源机备份。
+
+九、台式机上需要适配的路径与前置条件
+当前项目路径：E:\机器狗算法应用开发；新运行根目录：E:\RobotDogRuntime\jazzy。
+Windows Python 当前写死为 D:\Python\python.exe / pythonw.exe；台式机需确认 Python 3＋Tkinter 的实际路径。
+入口 cmd 写死了 pythonw 路径；vm.py 写死运行目录、SSH 私钥路径和系统 OpenSSH 路径。
+如台式机盘符不同，适配这些入口；重建相关介质时再核对 prepare_source.py / make_seed.py 中的运行目录。
+新环境 SSH/QMP 使用本机回环端口 2265/2266；旧环境使用 2255/2256，需确认台式机没有端口冲突。
+VM 使用 WHPX 加速，台式机是否可用尚未确认；不要直接照运行修复虚拟化冲突的旧 bat/cmd。
+若需要改变 Windows 虚拟化、安全或 eNSP/VirtualBox 环境，先说明方案与影响，询问用户。
+桌面快捷方式需要按台式机实际目录重建；Windows 显卡偏好也不随目录拷贝自动迁移。
+已安装盘无需重新跑首次安装、重新下载 Ubuntu 或重新编译所有源码；先尝试恢复现有运行成果。
+
+十、启动、自测和验收入口
+用户入口：运行Go2行走仿真.cmd → 点击启动 → Ubuntu 自动登录 → Gazebo 与行走面板。
+面板显示关节 12/12、控制器激活并站稳后，按住方向按钮移动，松开停止；空格也可停止。
+“居中并跟随机器狗”只改变观察相机；“停止仿真”只停止 Gazebo，不关闭 Ubuntu。
+工程辅助入口：baseline\go2_jazzy\vm.py，支持 start / status / shutdown / exec / upload / download。
+自测在 Ubuntu 中运行：source /opt/ros/jazzy/setup.bash; source ~/ros2_ws/install/setup.bash; python3 ~/bin/verify_walking.py
+自测期间不要同时按方向按钮；结果位于 ~/walking-verification.json 和 ~/walking-telemetry.csv。
+先核对显示性能，再根据发生的改动执行必要运动测试，最后由用户确认验收；不要反复无目的全量检查。
+
+十一、Git 与阅读入口
+原工作区分支 main，基础 HEAD 为 aea73bc10bf19dc8a1ebd01ccf7404f2f52a54ae；Git 迁移使用独立交接分支，不切换主对话工作区。
+快照纳入旧 Go2 robot.xacro 和 unitree_joint_control_tool.cpp 的两处修复，保留原工作区，不重置。
+快照同时纳入 AGENTS.md、baseline、验证结果和启动/说明文件；台式机需获取交接分支，不能只拉取尚未合并的 main。
+接手先读本文件，再读：AGENTS.md、Go2行走仿真使用说明.txt、baseline\go2_jazzy\工程维护说明.txt。
+需要运动证据时再读 行走控制验证记录.txt 和 verification 内对应结果，不要先扫描全部源码和日志。
+性能相关下一步主要看 vm.py、walking.gui.config、start-simulation.sh；先确认主对话是否已有后续修复。
+
+可直接给台式机 Codex 的开场指令：
+“先读《台式机迁移交接说明.txt》和 AGENTS.md，清点本机已有的机器狗环境与迁移文件，不覆盖旧成果。
+先恢复现有 Jazzy＋CHAMP 行走环境、排查图形卡顿，再让我验收。重大方案及影响 eNSP 的改动先问我。
+目前不要开始 SLAM、YOLO 或导航；把已确认结果、推测和未验证事项分开说明。”

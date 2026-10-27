@@ -1,0 +1,19 @@
+# Installed VM disks and runtime credentials are transferred separately.
+*.qcow2
+*.img
+*.iso
+*.vdi
+robot_vm_key*
+id_rsa
+id_ed25519
+.env
+.env.local
+RobotDogRuntime/
+
+# Local caches and generated build output.
+__pycache__/
+*.py[cod]
+*.log
+baseline/**/build/
+baseline/**/install/
+baseline/**/log/

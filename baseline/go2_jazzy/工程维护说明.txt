@@ -1,0 +1,33 @@
+Go2 Jazzy 工程维护说明
+
+源码来源锁定在 upstream.json；prepare_source.py 从已核对提交的原始归档重新提取并应用明确的本地修复。
+vendor 为可检查的源码；运行盘不纳入项目 Git。
+provision.sh 安装系统依赖、编译六个包，复制控制面板和启动工具；make_seed.py 打包 NoCloud 安装介质。
+已安装运行盘启动时不会反复执行首次安装。正常运行入口是项目根目录的 cmd 或桌面快捷方式。
+
+控制链：面板发布 /cmd_vel → CHAMP 足端轨迹和逆运动学 → /joint_group_effort_controller/joint_trajectory → ros2_control 关节 PID / 力矩 → Gazebo 物理。
+当前 CHAMP 节点使用 cmd_vel 和 body_pose；不是基于 SLAM 的机身定位闭环。低层关节控制使用关节反馈。
+start_physics.py 等待两个控制器配置完成，再协调激活和解除世界暂停，避免加载期间无控制下落。
+watchdog 在 C++ 控制节点内使用单调时钟；超过 500ms 收不到速度指令，将目标速度清零。
+仿真速度低于实时速度时，动作持续时长按 Gazebo 仿真时钟解释。
+
+重新运行自测：
+先正常启动图形仿真，测试期间不要同时操作方向按钮。
+在项目目录使用 D:\Python\python.exe baseline\go2_jazzy\vm.py exec "source /opt/ros/jazzy/setup.bash; source ~/ros2_ws/install/setup.bash; python3 ~/bin/verify_walking.py"
+结果写到 Ubuntu 的 ~/walking-verification.json 和 ~/walking-telemetry.csv。
+verify_walking.py 只发速度指令，检查真实仿真位移、姿态、关节、转向、停止和失联停止，不设置机器人位置。
+物理真值仅作为评价参考；定位算法和传感器里程计未在本阶段验收。
+
+资源与图形：
+vm.py 将新虚拟机设为 8 vCPU、12288MiB 内存。
+独立可执行文件 E:\RobotDogRuntime\qemu\qemu-go2-jazzy.exe 与原 QEMU 位于同目录，用于隔离 Windows 的每应用 GPU 偏好。
+仅对这个可执行文件设置 HKCU\Software\Microsoft\DirectX\UserGpuPreferences 的 GpuPreference=2;。
+原值备份位于 E:\RobotDogRuntime\jazzy\gpu-preference-backup.json。原 QEMU、eNSP 和 VirtualBox 的图形偏好未变。
+Ubuntu 内通过 DISPLAY=:0 glxinfo -B 核对实际渲染器；虚拟化上报的显存数字不作为实际分配量。
+
+磁盘修复记录：
+首次图形测试前，在新虚拟机尚未完全退出时尝试创建内部快照，造成新盘快照元数据损坏。
+先完整备份，再在副本修复代理创建的错误快照元数据和引用计数，导出独立的 robot-dog-clean.qcow2；离线 qemu-img check 无错误，随后成功启动并完成运动测试。
+当前 vm.py 仅启动 clean 盘。原失败盘、备份、修复工作盘和 disk-recovery.log 暂保留供追溯，不应直接启动。
+不再使用内部快照。备份、检查或修改磁盘前，必须正常关闭 Ubuntu，并确认 QEMU 进程完全消失，不能仅等待固定秒数。
+vm.py shutdown 会等待监控端口退出；离线磁盘操作前仍须核对进程不存在。

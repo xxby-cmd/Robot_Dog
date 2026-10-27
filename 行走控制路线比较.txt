@@ -1,0 +1,50 @@
+行走控制路线比较
+日期：2026-10-27
+状态：用户已明确选择独立搭建 Jazzy＋Harmonic＋CHAMP；已完成接入与运动自测，待用户验收。
+此记录保留方案比较依据；实际结果与限制见“行走控制验证记录.txt”，不代表整个 Baseline 完成。
+
+一、现有路线：Ubuntu 20.04＋ROS Noetic＋Gazebo 11＋unitree_guide
+现有仿真已验证过完整 Go2 模型、关节、IMU 与站立。
+宇树 unitree_guide 的 CMake 与主程序直接支持 Go1/A1，没有现成 Go2 分支。
+它的 ROS 关节指令与 IMU 接口和现有工程吻合，但需适配 Go2 的腿部几何、动力学参数及控制配置。
+主要不确定性在控制移植和物理调参，而非单纯依赖安装。
+传统控制代码包含状态估计和基于二次规划的平衡控制；不需要先训练强化学习策略。
+已核对官方源提交：fdf4d23de6affe8ee38fb4d892f61053fa1fcbcb。
+
+二、ROS2 路线的两个具体候选
+1. anujjain-dev/unitree-go2-ros2（humble 分支）
+   上游说明测试平台为 Ubuntu 22.04＋ROS2 Humble，使用 Gazebo Classic 相关接口。
+   已提供 Go2 专用描述、控制配置、遥控行走和传感器配置。
+   上游明确标注完整 SLAM 和 Nav2 集成尚未完成。
+2. khaledgabr77/unitree_go2_ros2（main 分支）
+   目标平台为 Ubuntu 24.04＋ROS2 Jazzy＋Gazebo Harmonic。
+   已提供 Go2 专用模型、步态参数、ros2_control 配置、速度接口与多种传感器配置。
+   实际启动脚本使用 ros_gz_sim、ros_gz_bridge 和 gz_ros2_control，具备 CHAMP 控制器启动链路。
+   上游同样明确标注完整 SLAM 和 Nav2 集成尚未完成。
+   发现文档/依赖不一致：安装说明仍列 gazebo-ros2-control，实际依赖为 gz_ros2_control；包清单把 unitree_application 写成 unitree_applications。实施时需核对修复，不能照抄即视为可运行。
+   上游配置和演示不等于本机运动稳定性已经验证；实施前需锁定具体提交版本。
+
+三、结论与推荐（用户已选择 Jazzy＋Harmonic＋CHAMP）
+若只考虑复用当前环境，Noetic 路线改动较少；但 Go2 行走控制仍有实质适配工作。
+结合用户将长期研究原理与创新、下周汇报按实际进展展示，建议优先评估并采用 Jazzy＋Harmonic＋CHAMP 的 Go2 专用工程。
+Jazzy＋Harmonic 是官方支持的版本组合；ROS2 Jazzy 的支持期至 2029-05，Humble 至 2027-05。
+推荐理由是复用已有 Go2 行走配置并采用适合后续工程的平台，而非保证新路线在本机一定更快或立即稳定。
+本次路线变更已获用户确认。SLAM 继续限定为文档中的一种算法；RTAB-Map 官方提供 ROS2/Jazzy 接口，具体 SLAM 选择留到对应任务，不在本任务擅自替换。
+
+四、若用户确认新路线，建议实施边界
+沿用独立 QEMU，在单独虚拟磁盘中配置 Ubuntu 24.04；保留原 Ubuntu 20.04 环境和启动入口。
+不升级或改动 eNSP、VirtualBox、Windows 虚拟化/安全设置。
+新环境先完成最低必要的 Go2 行走链路，暂不把全部传感器、SLAM 或导航纳入第一项任务。
+图形性能、仿真速度、步态稳定性与停止行为都需要本机测试。已有虚拟机的启动/连接异常也需核查，不认为更换 ROS 能自动解决虚拟机问题。
+交付为：可启动的图形环境、前进/转向/停止入口、运动与姿态数据、已知限制和用户验收步骤。
+自测通过后状态为“待用户验收”，验收前不自行进入下一项功能任务。
+
+参考来源
+https://github.com/unitreerobotics/unitree_guide
+https://github.com/anujjain-dev/unitree-go2-ros2/tree/humble
+https://github.com/khaledgabr77/unitree_go2_ros2
+https://github.com/khaledgabr77/unitree_go2_ros2/blob/main/unitree_go2_sim/launch/unitree_go2_launch.py
+https://github.com/khaledgabr77/unitree_go2_ros2/blob/main/unitree_go2_sim/package.xml
+https://gazebosim.org/docs/latest/ros_installation/
+https://www.ros.org/reps/rep-2000.html
+https://github.com/introlab/rtabmap_ros/tree/ros2

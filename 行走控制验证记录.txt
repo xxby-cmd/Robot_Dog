@@ -1,0 +1,62 @@
+行走控制接入验证记录
+日期：2026-10-27
+任务状态：自测通过待用户验收；不是“用户已验收”，也不代表整个 Baseline 已完成。
+收尾状态：用户要求跳过剩余检查，已停止最后退出可靠性排查和启动复查。正常关机偶尔较慢，启动器可能先报超时；没有宣称此问题已修复。最后一次查询时 QEMU 进程已经消失，虚拟机关闭。
+
+一、采用路线与已完成改动
+用户比较后选择独立的 Ubuntu 24.04＋ROS2 Jazzy＋Gazebo Harmonic＋CHAMP。
+六个源码包已完成编译；完整 Go2 的 12 个关节通过 ros2_control 和 Gazebo 物理实现运动。
+接通前进、后退、左转、右转、停止；增加 Windows 启动器、桌面快捷方式、Ubuntu 行走面板。
+修正包依赖、可选相机引用、世界 IMU 插件和图形/无界面启动参数。
+增加控制器配置及激活协调，世界在控制器就绪前保持暂停，修复加载期间可能先侧翻的问题。
+C++ 速度输入限制、非有限值处理及 500ms 指令中断保护已接入。
+面板增加松开停止、失去焦点停止、连续操作 10 秒上限、数据中断和机身倾斜保护。
+
+二、运行版本
+上游：https://github.com/khaledgabr77/unitree_go2_ros2
+锁定提交：55ff151632a0220bf3ae0c0772392615d86da7a8
+原始归档 SHA256：946c04be80fbad15a592ffcba81871711886cb88e64e9e2b2f56fa2b024a9557
+操作系统：Ubuntu 24.04.5 LTS；内核 6.8.0-147-generic。
+Gazebo Sim：8.15.0（Harmonic）；ROS：Jazzy。
+ros-jazzy-gz-ros2-control：1.2.20-1noble.20261006.040504。
+ros-jazzy-ros2-controllers：4.42.1-1noble.20260924.191822。
+机器资源：8 vCPU、12288MiB 内存；Ubuntu 实测 nproc=8。
+实际渲染器：virgl (NVIDIA GeForce RTX 4060 Laptop GPU/PCIe/SSE2)，Mesa 25.2.8，Accelerated=yes，OpenGL 4.2。
+独显通过 Windows 对新 QEMU 专用可执行文件的高性能偏好启用；没有 GPU 直通或独占显存分配。
+
+三、量化运动验证
+脚本：baseline\go2_jazzy\verify_walking.py。
+方法：只发布 /cmd_vel；从关节、IMU 和 Gazebo 物理真值测量实际运动，不设置机器人位姿。
+Gazebo 真值只用于评价，不输入控制器，不作为可用里程计或 SLAM 的验收结果。
+
+首次无图形运动测试：PASS；前进约 0.670m、左转约 61.1°，停止与指令中断自动停止通过。
+资源升级并修复启动顺序后的图形测试：PASS；前进约 0.673m、左转约 64.9°；平均实时因子 0.760。
+再次启动后的图形四方向测试：PASS，详细结果如下。
+  前进：0.15m/s 指令，持续 5 仿真秒，沿初始前向位移 0.741m。
+  后退：-0.12m/s 指令，持续 3 仿真秒，沿初始前向位移 -0.461m。
+  左转：0.25rad/s 指令，持续 4 仿真秒，偏航增加 1.233rad（70.7°）。
+  右转：-0.25rad/s 指令，持续 4 仿真秒，偏航减少 1.017rad（58.3°）。
+  停止：稳定阶段 2 仿真秒内位置漂移 0.000125m，通过 <0.10m 门槛。
+  指令中断：停止发布速度后，稳定阶段漂移 0.000068m，通过 <0.10m 门槛。
+  关节：12 个；最低机身高度 0.225m。
+  最大绝对横滚 0.119rad（6.8°），最大绝对俯仰 0.093rad（5.3°）；没有侧翻。
+  测试跨度：36.06 仿真秒 / 79.93 现实秒；平均实时因子 0.451。
+
+实时因子是物理仿真时间与现实时间之比，不是画面帧率。图形运行会受前后台状态和宿主机负载影响。
+当前实测约 0.45～0.76 倍实时速度，不能承诺始终实时；已实际增加 CPU、内存并核对独显生效。
+转向和位移存在误差、前进可能有方向偏差；这些结果只支持平地低速遥控演示。
+
+四、证据与重现
+项目内保存：baseline\go2_jazzy\verification\walking-verification-final.json、walking-telemetry-final.csv、环境配置及截图。
+运行环境另存首次与升级后测试结果，路径为 E:\RobotDogRuntime\jazzy\walking-verification-*.json。
+Ubuntu 原始启动日志：/home/robot/.ros/robot-dog-jazzy.log。
+安装日志：/var/log/robot-dog-jazzy-setup.log。
+在多次独立启动中确认 joint_states_controller 和 joint_group_effort_controller 均为 active，并出现 GO2_STARTUP_READY。
+Windows 新启动器的启动按钮已实际启动虚拟机；正常关机、离线磁盘检查和再次启动已执行。
+当前使用的独立运行盘 robot-dog-clean.qcow2 离线检查无错误，恢复过程记在工程维护说明中。
+
+五、用户验收
+打开桌面“Go2行走仿真（ROS2）”或项目“运行Go2行走仿真.cmd”。
+按“Go2行走仿真使用说明.txt”检查看见模型、12 个关节、按住移动、松开停止、左右转和正常关闭。
+确认体验符合要求后，由用户明确标记验收；验收前不开展下一个功能任务。
+尚未完成：激光/相机/定位里程计链路验收、SLAM、YOLO、导航和自主探索。

@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-27",
+  "task_status": "self_test_passed_pending_user_acceptance",
+  "cpu_vcpus": 8,
+  "memory_mib": 12288,
+  "guest": "Ubuntu 24.04.5 LTS",
+  "kernel": "6.8.0-147-generic",
+  "ros": "Jazzy",
+  "gazebo_sim": "8.15.0",
+  "mesa": "25.2.8",
+  "renderer": "virgl (NVIDIA GeForce RTX 4060 Laptop GPU/PCIe/SSE2)",
+  "graphics_accelerated": true,
+  "dedicated_gpu_passthrough": false,
+  "baseline_complete": false,
+  "sources": {
+    "repository": "https://github.com/khaledgabr77/unitree_go2_ros2",
+    "commit": "55ff151632a0220bf3ae0c0772392615d86da7a8",
+    "archive_sha256": "946c04be80fbad15a592ffcba81871711886cb88e64e9e2b2f56fa2b024a9557",
+    "local_fixes": [
+      "package dependency name",
+      "velocity command validation and 500ms watchdog",
+      "optional depth-camera include",
+      "world IMU system",
+      "headless simulation launch option",
+      "optional localization nodes for walking-only task",
+      "controller activation before physics startup"
+    ]
+  }
+}
