@@ -8,7 +8,7 @@ import socket
 import subprocess
 import sys
 import time
-from common import DEFAULT_CONFIG, SOURCE, assert_offline, load_config, port_open, preflight, write_json
+from common import DEFAULT_CONFIG, SOURCE, assert_offline, load_config, port_open, preflight, write_json, ensure_config
 sys.path.insert(0, str(SOURCE))
 import startup
 
@@ -30,22 +30,31 @@ def command_line(config):
     root = Path(config['runtime'])
     disk = str(config['disk']).replace(',', ',,')
     seed = str(config['seed']).replace(',', ',,')
-    return [config['qemu'], '-name', 'Go2 Desktop ROS2 Jazzy CHAMP', '-accel', 'whpx', '-machine', 'pc',
+    accelerator = 'whpx'
+    irqchip = config.get('whpx_kernel_irqchip')
+    if irqchip is not None:
+        if irqchip not in ('on', 'off'):
+            raise ValueError('whpx_kernel_irqchip must be on or off')
+        accelerator += ',kernel-irqchip=' + irqchip
+    args = [config['qemu'], '-name', config.get('vm_name', 'Go2 Desktop ROS2 Jazzy CHAMP'), '-accel', accelerator, '-machine', 'pc',
             '-smp', str(config['cpus']), '-m', str(config['memory_mib']),
             '-drive', f'file={disk},format=qcow2,if=virtio',
             '-drive', f'file={seed},media=cdrom,readonly=on',
             '-netdev', f'user,id=net0,hostfwd=tcp:127.0.0.1:{config["ssh_port"]}-:22',
             '-device', 'virtio-net-pci,netdev=net0', '-device', 'qemu-xhci', '-device', 'usb-tablet',
             '-serial', f'file:{root/"jazzy/serial.log"}',
-            '-qmp', f'tcp:127.0.0.1:{config["qmp_port"]},server=on,wait=off', '-rtc', 'base=utc',
-            '-device', 'virtio-vga-gl', '-display', config['display']+',gl=on']
+            '-qmp', f'tcp:127.0.0.1:{config["qmp_port"]},server=on,wait=off', '-rtc', 'base=utc']
+    args += (['-device', 'virtio-vga', '-display', 'none'] if config.get('headless') else
+             ['-device', 'virtio-vga-gl', '-display', config['display']+',gl=on'])
+    return args
 
 def start(config, progress=None):
     with startup.operation_lock(Path(config['runtime'])/'jazzy'):
         return _start(config, progress)
 
 def _start(config, progress):
-    if startup.existing(config['qmp_port'], 'Go2 Desktop ROS2 Jazzy CHAMP'):
+    name = config.get('vm_name', 'Go2 Desktop ROS2 Jazzy CHAMP')
+    if startup.existing(config['qmp_port'], name):
         print('该桌面虚拟机已经运行。')
         return
     for field in ('qemu', 'disk', 'seed', 'key'):
@@ -55,6 +64,14 @@ def _start(config, progress):
         raise RuntimeError('WHPX 不可用。先评估 eNSP/VirtualBox 影响并向用户确认，不自动启用虚拟化功能。')
     assert_offline(config)
     root = Path(config['runtime'])
+    if not config.get('headless'):
+        # Keep the original laptop's discrete-GPU selection, scoped to this VM.
+        result = subprocess.run([sys.executable, str(SOURCE/'gpu_policy.py'), 'ensure',
+                                 '--config', str(root/'robotdog-host.json')],
+                                capture_output=True, timeout=30,
+                                creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+        if result.returncode:
+            raise RuntimeError('独显配置未完成：'+result.stderr.decode(errors='replace')[-500:])
     args = command_line(config)
     def configure(pid):
         if config.get('performance_cores', True):
@@ -63,7 +80,7 @@ def _start(config, progress):
                 write_json(root/'jazzy/host-scheduling.json', apply(pid))
             except (OSError, AttributeError) as error:
                 print('进程调度未调整，保留系统默认：', error, flush=True)
-    startup.spawn(args, root/'jazzy', config['qmp_port'], 'Go2 Desktop ROS2 Jazzy CHAMP', progress, configure)
+    startup.spawn(args, root/'jazzy', config['qmp_port'], name, progress, configure)
     print('虚拟机已启动；首次安装时请等待 Ubuntu 自动安装。', flush=True)
 
 def wait_for_graphics(config, progress=None, cancel_event=None, timeout=180):
@@ -148,10 +165,21 @@ def main():
     parser.add_argument('action', choices=['start','shutdown','status','exec','gpu','verify','upload','download'])
     parser.add_argument('command', nargs='*')
     parser.add_argument('--config', type=Path, default=DEFAULT_CONFIG)
+    parser.add_argument('--headless', action='store_true')
+    parser.add_argument('--display-backend', choices=['gtk', 'sdl'])
+    parser.add_argument('--performance-cores', action=argparse.BooleanOptionalAction, default=None)
     args = parser.parse_args()
     if args.action == 'exec' and not args.command:
         parser.error('exec 需要一条完整的来宾命令')
-    config = load_config(args.config)
+    config = ensure_config(args.config) if args.action == 'start' else load_config(args.config)
+    if args.action == 'start':
+        config = dict(config)
+        if args.headless:
+            config['headless'] = True
+        if args.display_backend:
+            config['display'] = args.display_backend
+        if args.performance_cores is not None:
+            config['performance_cores'] = args.performance_cores
     if args.action == 'start':
         start(config)
     elif args.action == 'shutdown':

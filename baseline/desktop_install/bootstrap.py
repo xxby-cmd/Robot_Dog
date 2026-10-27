@@ -10,13 +10,147 @@ import subprocess
 import sys
 import time
 import uuid
+import hashlib
+import tarfile
 from urllib.parse import urlparse
 
-from common import (DEFAULT_CONFIG, HERE, REPO, available_ports, assert_offline,
-                    load_config, port_open, preflight, write_json)
+from common import (DEFAULT_CONFIG, HERE, REPO, SOURCE, available_ports, assert_offline,
+                    load_config, port_open, preflight, write_json, host_defaults, save_config, discover_config)
 from downloads import fetch
 from extract_msi import extract_sevenzip
 from seed import build_seed
+
+
+def project_fingerprint():
+    paths = list((SOURCE/'vendor').rglob('*'))
+    from seed import TOOLS
+    paths += [SOURCE/name for name in TOOLS]
+    files = {str(p.relative_to(SOURCE)).replace('\\', '/'): hashlib.sha256(p.read_bytes()).hexdigest()
+             for p in paths if p.is_file() and '__pycache__' not in p.parts}
+    encoded = json.dumps(files, sort_keys=True).encode()
+    return {'sha256': hashlib.sha256(encoded).hexdigest(), 'files': files}
+
+
+def update_project(config, progress=None, allow_pending=False):
+    """Apply the checked-out source to this VM without reinstalling its system."""
+    import vm
+    import startup
+    import shlex
+    root = Path(config['runtime'])/'jazzy'
+    with startup.operation_lock(root):
+        manifest = project_fingerprint()
+        installed = root/'source-installed.json'
+        if installed.exists() and json.loads(installed.read_text(encoding='utf-8')).get('sha256') == manifest['sha256']:
+            return '本机工程已是当前版本。'
+        ready = vm.remote(config, 'test -f /var/lib/robot-dog-jazzy/setup.complete', timeout=12)
+        if ready.returncode:
+            if allow_pending:
+                return 'Ubuntu 首次安装仍在进行；安装完成后再应用工程更新。'
+            raise RuntimeError('首次安装尚未完成，暂不应用工程更新。')
+        if progress:
+            progress('正在更新本机工程，仿真会先停止；系统和个人设置保留。')
+        archive_path = root/'project-update.tar.gz'
+        from seed import TOOLS
+        with tarfile.open(archive_path, 'w:gz') as archive:
+            archive.add(SOURCE/'vendor', arcname='go2_champ', filter=lambda item: None if '__pycache__' in item.name else item)
+            for name in TOOLS:
+                archive.add(SOURCE/name, arcname='tools/'+name)
+        remote_archive = '/home/robot/.cache/robotdog-project-update.tar.gz'
+        with archive_path.open('rb') as stream:
+            subprocess.run(vm.ssh_args(config)+['cat > '+shlex.quote(remote_archive)], stdin=stream, check=True,
+                           timeout=120, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+        script = r'''python3 - <<'PY'
+import os, signal, subprocess, time, tarfile, shutil, tempfile
+from pathlib import Path
+home = Path.home()
+def alive(pid):
+    try:
+        return (Path('/proc',str(pid),'stat').read_text().rsplit(')',1)[1].split()[0] != 'Z')
+    except FileNotFoundError:
+        return False
+launchers, panels, processes = [], [], {}
+for entry in Path('/proc').iterdir():
+    if not entry.name.isdigit(): continue
+    try:
+        args = (entry/'cmdline').read_bytes().split(bytes([0]))
+        stat = (entry/'stat').read_text().rsplit(')',1)[1].split()
+    except OSError: continue
+    processes[int(entry.name)] = (int(stat[1]), args)
+    if len(args)>3 and args[1:4]==[b'/opt/ros/jazzy/bin/ros2',b'launch',b'unitree_go2_sim']:
+        launchers.append(int(entry.name))
+    if len(args)>1 and args[1]==str(home/'bin/robot-dog-panel.py').encode():
+        panels.append(int(entry.name))
+# Gazebo starts its server/GUI in separate process groups. Retain the exact
+# descendants before launch exits, including an orphan from an older update.
+world = str(home/'ros2_ws/install/unitree_go2_description/share/unitree_go2_description/worlds/default.sdf').encode()
+owned = set(launchers)
+owned.update(pid for pid, (_, args) in processes.items()
+             if world in args or (args and args[0].startswith(b'gz sim ') and world in args[0]))
+while True:
+    children = {pid for pid, (parent, _) in processes.items() if parent in owned}
+    if children <= owned: break
+    owned.update(children)
+for pid in launchers:
+    try: os.kill(pid, signal.SIGINT)
+    except ProcessLookupError: pass
+time.sleep(2)
+for pid in owned:
+    try:
+        current = Path('/proc',str(pid),'cmdline').read_bytes().split(bytes([0]))
+        if current == processes[pid][1]: os.kill(pid,signal.SIGINT)
+    except (ProcessLookupError,FileNotFoundError): pass
+deadline = time.monotonic()+40
+while any(alive(pid) for pid in owned):
+    if time.monotonic()>deadline: raise RuntimeError('Simulation has not stopped; source preserved')
+    time.sleep(.2)
+for pid in panels:
+    try: os.kill(pid, signal.SIGTERM)
+    except ProcessLookupError: pass
+deadline = time.monotonic()+4
+while any(alive(pid) for pid in panels) and time.monotonic()<deadline:
+    time.sleep(.1)
+for pid in panels:
+    path = Path('/proc',str(pid),'cmdline')
+    if path.exists() and path.read_bytes().split(bytes([0]))[1:2]==[str(home/'bin/robot-dog-panel.py').encode()]:
+        os.kill(pid,signal.SIGKILL)  # An older idle rclpy/Tk panel may retain its file lock.
+source = home/'ros2_ws/src/go2_champ'
+backup = home/'.cache/robotdog-source-before-update.tar.gz'
+with tarfile.open(backup,'w:gz') as archive:
+    archive.add(source,arcname='go2_champ')
+    archive.add(home/'bin',arcname='tools')
+with tempfile.TemporaryDirectory(prefix='robotdog-update-',dir=home/'.cache') as temporary:
+    stage = Path(temporary)
+    with tarfile.open(home/'.cache/robotdog-project-update.tar.gz') as archive:
+        archive.extractall(stage,filter='data')
+    shutil.copytree(stage/'go2_champ',source,dirs_exist_ok=True)
+    for path in (stage/'tools').iterdir():
+        output = home/'bin'/path.name
+        output.write_bytes(path.read_bytes().replace(b'\r\n',b'\n'))
+        output.chmod(0o755)
+print('Previous source preserved; new source and tools copied',flush=True)
+PY
+source /opt/ros/jazzy/setup.bash
+cd /home/robot/ros2_ws
+colcon build --parallel-workers 3 --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
+'''
+        # Stop immediately on any failed copy/build; never mark a partial update as installed.
+        result = vm.remote(config, 'set -e\n'+script, timeout=600)
+        (root/'project-update.log').write_text(result.stdout+result.stderr, encoding='utf-8')
+        if result.returncode:
+            raise RuntimeError('本机工程更新未完成；已保留旧源码，详见 '+str(root/'project-update.log'))
+        if project_fingerprint()['sha256'] != manifest['sha256']:
+            raise RuntimeError('更新期间本地源码发生变化，请按当前版本重新同步。')
+        result = vm.remote(config, r'''python3 - <<'PY'
+import subprocess
+from pathlib import Path
+with (Path.home()/'.ros/panel.log').open('a') as log:
+    process = subprocess.Popen(['/home/robot/bin/start-panel.sh'],stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+print('Updated panel started',process.pid)
+PY''', timeout=15)
+        if result.returncode:
+            raise RuntimeError('源码已更新，控制面板未能启动：'+result.stderr)
+        write_json(installed, manifest)
+        return '工程更新已应用，正在加载机器狗与控制面板。'
 
 def require_host(report, allow_no_whpx=False):
     if not report['windows_x64'] or not report['python_supported']:
@@ -49,7 +183,7 @@ def new_config(args, report):
         if parsed.scheme != 'https' or not parsed.netloc or any(char.isspace() for char in mirror):
             raise ValueError('软件源必须是没有空白字符的 HTTPS 地址。')
     ssh_port, qmp_port = available_ports()
-    return {'schema':1, 'runtime':str(root), 'instance_id':'robotdog-desktop-'+uuid.uuid4().hex,
+    return {**host_defaults(report), 'schema':1, 'runtime':str(root), 'instance_id':'robotdog-desktop-'+uuid.uuid4().hex,
             'qemu':str(root/'qemu/qemu-go2-jazzy.exe'), 'disk':str(root/'jazzy/robot-dog-clean.qcow2'),
             'seed':str(root/'jazzy/robot-dog-seed.iso'), 'key':str(root/'robot_vm_key'),
             'ssh':report['ssh'], 'ssh_port':ssh_port, 'qmp_port':qmp_port, 'cpus':cpus,
@@ -80,11 +214,12 @@ def install(args):
         if args.runtime and args.runtime.resolve() != Path(config['runtime']).resolve():
             raise RuntimeError('现有本机配置指向另一运行目录。新部署请使用新的 --config 文件。')
     else:
-        config = new_config(args, report)
+        config = discover_config(args.runtime, report) or new_config(args, report)
     root = Path(config['runtime'])
     marker = root/'bootstrap-state.json'
     if root.exists() and any(root.iterdir()):
-        if not marker.is_file() or json.loads(marker.read_text()).get('instance_id') != config['instance_id']:
+        owned = marker.is_file() and json.loads(marker.read_text()).get('instance_id') == config['instance_id']
+        if not owned and not (config.get('adopted') and config.get('prepared')):
             raise RuntimeError('目标目录不属于此配置，拒绝覆盖。')
     assert_offline(config)
     if config.get('prepared'):
@@ -97,7 +232,7 @@ def install(args):
         if shutil.disk_usage(root).free < 20*1024**3:
             raise RuntimeError('目标磁盘至少需要 20GiB 可用空间，建议 25GiB 以上。')
         write_json(marker, {'owner':'robotdog-desktop-bootstrap', 'instance_id':config['instance_id']})
-        write_json(args.config, config)
+        save_config(args.config, config)
         (root/'jazzy').mkdir(exist_ok=True)
         assets = json.loads((HERE/'assets.json').read_text())
         supplied = {}
@@ -140,9 +275,10 @@ def install(args):
         config['prepared'] = True
         config['qemu_version'] = version
         write_json(root/'assets-used.json', assets)
-        write_json(args.config, config)
+        save_config(args.config, config)
         write_json(marker, {'owner':'robotdog-desktop-bootstrap', 'instance_id':config['instance_id'], 'prepared':True})
         print('安装文件已准备好，未复制笔记本私钥，也未改动系统虚拟化设置。', flush=True)
+    save_config(args.config, config)
     print('本机配置：', args.config, '\n运行目录：', root, flush=True)
     if args.start:
         if args.prepare_only:
@@ -157,6 +293,7 @@ def install(args):
         vm.start(config)
     if args.wait:
         wait_install(config, args.timeout)
+        print(update_project(config), flush=True)
 
 def setup_state(config):
     import vm
@@ -197,7 +334,7 @@ def wait_install(config, timeout):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['preflight','install','wait-install','logs','retry-install','launch'])
+    parser.add_argument('action', choices=['preflight','install','wait-install','logs','retry-install','launch','update'])
     parser.add_argument('--config', type=Path, default=DEFAULT_CONFIG)
     parser.add_argument('--runtime', type=Path)
     parser.add_argument('--cpus', type=int)
@@ -221,12 +358,15 @@ def main():
     elif args.action == 'install':
         install(args)
     else:
-        config = load_config(args.config)
+        from common import ensure_config
+        config = ensure_config(args.config) if args.action == 'update' else load_config(args.config)
         if args.action == 'wait-install':
             wait_install(config, args.timeout)
         elif args.action == 'launch':
             subprocess.Popen([sys.executable, str(HERE/'launcher.py'),'--config',str(args.config)],
                              creationflags=subprocess.CREATE_NO_WINDOW)
+        elif args.action == 'update':
+            print(update_project(config), flush=True)
         else:
             import vm
             if args.action == 'logs':

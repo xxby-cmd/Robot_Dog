@@ -69,6 +69,15 @@
                 <box size="${trunk_length} ${trunk_width} ${trunk_height}" />
             </geometry>
         </collision>
+        <!-- The rendered trunk mesh also contains the head. Its transformed
+             front envelope is x=0.188..0.332, y=+-0.065, z=-0.097..0.089 m.
+             Keep head contact geometry on this same rigid link and mass. -->
+        <collision name="head_collision">
+            <origin rpy="0 0 0" xyz="0.258 0 -0.004" />
+            <geometry>
+                <box size="0.150 0.132 0.190" />
+            </geometry>
+        </collision>
         <inertial>
             <origin rpy="0 0 0" xyz="${trunk_com_x} ${trunk_com_y} ${trunk_com_z}" />
             <mass value="${trunk_mass}" />

@@ -1,0 +1,103 @@
+{
+  "checked_at": "2026-10-27 21:31:59",
+  "status": "自测通过待用户验收",
+  "remote_base": "3cf599d55d3cea1fa94502a2f2cd34ae4a3092b4",
+  "new_project": "C:\\机器狗算法应用开发",
+  "runtime": "C:\\RobotDogDesktopRuntime",
+  "old_project": "D:/Robot_Dog",
+  "source_manifest_sha256": "e283dea4f63b7dc9273dc7bfbfca515311e51caada383c7c3ac8d6e27e7c6ded",
+  "head": {
+    "expectation": "after",
+    "robot_pose_commands": false,
+    "result": "PASS",
+    "temporary_wall": "head_contact_probe_1793107534",
+    "max_head_penetration_m": 0.0001338421770120668,
+    "final_forward_m": 0.25291557808710186,
+    "contact_collision_pairs": [
+      [
+        "head_contact_probe_1793107534::wall::collision",
+        "go2::base_link::base_link_fixed_joint_lump__head_collision_collision_1"
+      ]
+    ],
+    "wall_removed": true
+  },
+  "speeds": {
+    "result": "PASS",
+    "commands": {
+      "forward": [
+        0.11,
+        0.0
+      ],
+      "reverse": [
+        -0.09,
+        0.0
+      ],
+      "left": [
+        0.0,
+        0.18
+      ],
+      "right": [
+        0.0,
+        -0.18
+      ]
+    },
+    "native_input": false,
+    "persisted": {
+      "forward": 0.11,
+      "reverse": 0.09,
+      "turn": 0.18
+    },
+    "window": {
+      "panel": [
+        430,
+        690
+      ],
+      "tuner": [
+        440,
+        360
+      ],
+      "screen": [
+        1280,
+        768
+      ]
+    }
+  },
+  "walking": {
+    "result": "PASS",
+    "measurement_source": "Gazebo ground truth for evaluation only; no pose commands",
+    "controller": "CHAMP",
+    "tests": {
+      "forward_distance_m": 0.7206529438182101,
+      "stop_drift_m": 0.0003913986263505882,
+      "left_turn_rad": 1.0901926144329985,
+      "reverse_distance_m": -0.44796791225097266,
+      "right_turn_rad": -1.022397163653574,
+      "watchdog_drift_m": 3.064069544867875e-05,
+      "joint_count": 12,
+      "min_body_height_m": 0.21352170575705526,
+      "max_abs_roll_rad": 0.1267520271383628,
+      "max_abs_pitch_rad": 0.17452091403811854
+    },
+    "simulation_seconds": 36.02,
+    "wall_seconds": 75.590170796,
+    "real_time_factor": 0.4765169812515634
+  },
+  "hardware": {
+    "host_cpu": "Intel(R) Core(TM) i7-14700K",
+    "windows_build": 26300,
+    "cpus": 8,
+    "memory_mib": 12288,
+    "display": "sdl",
+    "whpx_kernel_irqchip": "off",
+    "hardware_profile": "intel-14700k-win26300"
+  },
+  "portability_tests": "12 tests PASS (8 portability/speed + 4 installer); actual absent-config recovery on desktop PASS; laptop fixtures only, no physical laptop retest",
+  "clean_shutdown_and_cold_start": "PASS via shared entry with scoped GPU preference",
+  "limits": [
+    "No physical laptop retest",
+    "Not real time or long-term stability proof",
+    "Earlier guest simultaneous SEGV/logind failure recovered; root cause unconfirmed"
+  ],
+  "github_push": "User explicitly authorized this repair and two-machine compatibility release; final push is confirmed by remote commit refs, not this pre-push test report.",
+  "global_push_rule": "C:/Users/XXBY/.codex/AGENTS.md; actual code only, ask once after validation"
+}

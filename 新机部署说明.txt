@@ -72,6 +72,7 @@ CPU、内存按新机资源生成初值；SSH/QMP 端口选择空闲的一对；
 随后再次 wait-install；不要删除或重建已安装磁盘。已完成或仍在安装中的实例不能用 retry-install 重装。
 重复 install 会保留已准备好的磁盘；安装准备未完成时按本机配置续传，不覆盖其他环境。
 QEMU 无窗口或立即退出：看运行目录 jazzy\qemu.log；不要盲目加 -cpu host，笔记本曾因此触发 WHPX 错误。
+若 Linux 早期启动停止推进且 QMP/SSH 不响应，先保留串口日志，不能仅凭进程存在判定正在安装。本台 i7-14700K / Windows 26300 在保持 8 vCPU / 12GB 时，使用本机配置 whpx_kernel_irqchip="off" 后完成首次安装、正常关机与冷启动验证。此可选项只调整该 QEMU 实例的中断控制后端，不修改 Windows 虚拟化或安全设置；其他电脑仍保留默认值，不能直接认定同一根因。
 图形卡顿：检查 gpu 的实际渲染器、Windows 负载、Gazebo 实时因子；不能把 glxgears 帧率当成 Gazebo 帧率。
 本机 CPU 的性能核心会自动识别，仅影响此 QEMU 进程；同构 CPU 保留默认，不照搬笔记本 CPU 编号。
 显示后端、资源等保存在本机配置中；必须正常关闭实例后再改 display / cpus / memory_mib。
@@ -88,7 +89,7 @@ Ubuntu 与 ROS apt 默认使用清华 TUNA HTTPS 镜像，下载仍由签名和�
 十、后续开发的文件位置
 新机 Python 连接工具：baseline\desktop_install\vm.py，支持 exec / upload / download / status / gpu / verify。
 来宾源码：/home/robot/ros2_ws/src/go2_champ；工作区：/home/robot/ros2_ws；工具：/home/robot/bin。
-Git 中 vendor 的修改不会自动进入虚拟机。新机 Codex 需正常停仿真、上传对应源码、编译受影响包、重新启动并自测。
+拉取新代码后使用共享启动器，或运行 py -3 baseline/desktop_install/bootstrap.py update：脚本按源码清单判断变化，停止本工程的仿真及子进程、备份来宾源码、同步工具与 vendor、增量编译并重开面板。没有变化时不重复编译，不重装 Ubuntu。
 不要使用 retry-install 代替正常源码更新；它只处理首次安装失败。
 重新制作安装介质前须关机并确认磁盘独占；已完成实例不会因为重复 install 自动重装。
 源机旧 Noetic 工具已归档在 baseline\legacy_noetic，完整课程资料和已有算法源码仍在原目录。
@@ -105,3 +106,18 @@ Git 中 vendor 的修改不会自动进入虚拟机。新机 Codex 需正常停�
 启动或图形检查超时会保留进程和日志，不自动强杀虚拟机或重建磁盘。
 笔记本两个正常关机后重开测试通过；这不是台式机实测，也没有覆盖 Windows 重启后的首次启动。
 首次黑屏根因尚未完全确认，详见 虚拟机启动排查记录.txt；新电脑更新代码后仍需现场验收。
+
+十三、笔记本与台式机共用代码
+运行Go2行走仿真.cmd 与 运行本机部署机器狗.cmd 现在使用同一个可移植入口。
+每台电脑的路径、CPU、内存、端口和已验证的兼容选项只保存在 .robotdog-desktop.local.json 与运行目录 robotdog-host.json，不进 Git。
+重新克隆后自动检查各本机固定磁盘根下 RobotDogRuntime / RobotDogDesktopRuntime，并恢复唯一有效的已安装实例，不复制旧工程或重建磁盘；多个有效实例时要求明确选择，不能猜测。
+自定义路径可用环境变量 ROBOTDOG_RUNTIME 指定，或 bootstrap.py install --runtime 路径 识别已有实例；没有已安装环境时才首次部署。
+笔记本默认 WHPX，台式机已验证的 i7-14700K / Windows 26300 默认启用本实例 kernel-irqchip=off；不把它推广为所有机器的设置。资源默认最多 8 核 / 12GB，并保留已保存的本机选择。
+独显配置仍只作用于 qemu-go2-jazzy.exe，渲染验收使用真实 NVIDIA 名称与加速状态，不再写死 RTX 4060。其他显卡未实测。
+这轮已在台式机运行验证；笔记本只有配置恢复与参数生成测试，仍需笔记本实际启动复测。
+
+十四、头部碰撞与速度调参
+模型保留原机身碰撞体，并根据可见网格的坐标变换补充同一刚体上的头部碰撞体，不修改机身质量和惯性。
+来宾“Go2 行走控制”面板新增“速度调参”，可分别设置前进、后退速度与转向角速度，保存后按钮与键盘使用同一份设置，保存时先停止运动。
+前进/后退范围 0.01～0.30 m/s，转向范围 0.05～0.50 rad/s，与原控制器安全上限一致；按住移动、松开停止与断令保护保留。
+设置存在来宾 ~/.config/robotdog/teleop.json，重启及源码更新保留；恢复默认值后仍需点击保存并应用。

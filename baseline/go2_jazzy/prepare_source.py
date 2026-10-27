@@ -3,9 +3,12 @@ from pathlib import Path
 import hashlib
 import json
 import tarfile
+import sys
 
 ROOT = Path(__file__).resolve().parent
-RUNTIME = Path(r'E:\RobotDogRuntime\jazzy')
+sys.path.insert(0, str(ROOT.parent / 'desktop_install'))
+from common import ensure_config
+RUNTIME = Path(ensure_config()['runtime']) / 'jazzy'
 DEST = ROOT / 'vendor'
 COMMIT = '55ff151632a0220bf3ae0c0772392615d86da7a8'
 PACKAGES = {'champ', 'champ_base', 'champ_msgs', 'unitree_application', 'unitree_go2_description', 'unitree_go2_sim'}
@@ -38,6 +41,13 @@ def replace(relative, before, after):
 
 replace('unitree_go2_sim/package.xml', '<exec_depend>unitree_applications</exec_depend>',
         '<exec_depend>unitree_application</exec_depend>')
+replace('unitree_go2_description/urdf/unitree_go2_robot.xacro',
+        '<box size="${trunk_length} ${trunk_width} ${trunk_height}" />\n            </geometry>\n        </collision>',
+        '<box size="${trunk_length} ${trunk_width} ${trunk_height}" />\n            </geometry>\n        </collision>\n'
+        '        <collision name="head_collision">\n'
+        '            <origin rpy="0 0 0" xyz="0.258 0 -0.004" />\n'
+        '            <geometry><box size="0.150 0.132 0.190" /></geometry>\n'
+        '        </collision>')
 replace('champ_base/include/quadruped_controller.h', '#include "rclcpp/rclcpp.hpp"',
         '#include "rclcpp/rclcpp.hpp"\n#include <chrono>')
 replace('champ_base/include/quadruped_controller.h', '    champ::Velocities req_vel_;',
@@ -95,7 +105,8 @@ metadata = {
     'archive_sha256': hashlib.file_digest(archive.open('rb'), 'sha256').hexdigest(),
     'local_fixes': ['package dependency name', 'velocity command validation and 500ms watchdog',
                     'optional depth-camera include', 'world IMU system', 'headless simulation launch option',
-                    'optional localization nodes for walking-only task', 'controller activation before physics startup'],
+                    'optional localization nodes for walking-only task', 'controller activation before physics startup',
+                    'head collision envelope measured from transformed visual mesh'],
 }
 (ROOT / 'upstream.json').write_text(json.dumps(metadata, indent=2), encoding='utf-8')
 with tarfile.open(RUNTIME / 'go2-champ-source.tar.gz', 'w:gz') as output:

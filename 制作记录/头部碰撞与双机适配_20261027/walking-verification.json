@@ -1,0 +1,20 @@
+{
+  "result": "PASS",
+  "measurement_source": "Gazebo ground truth for evaluation only; no pose commands",
+  "controller": "CHAMP",
+  "tests": {
+    "forward_distance_m": 0.7206529438182101,
+    "stop_drift_m": 0.0003913986263505882,
+    "left_turn_rad": 1.0901926144329985,
+    "reverse_distance_m": -0.44796791225097266,
+    "right_turn_rad": -1.022397163653574,
+    "watchdog_drift_m": 3.064069544867875e-05,
+    "joint_count": 12,
+    "min_body_height_m": 0.21352170575705526,
+    "max_abs_roll_rad": 0.1267520271383628,
+    "max_abs_pitch_rad": 0.17452091403811854
+  },
+  "simulation_seconds": 36.02,
+  "wall_seconds": 75.590170796,
+  "real_time_factor": 0.4765169812515634
+}

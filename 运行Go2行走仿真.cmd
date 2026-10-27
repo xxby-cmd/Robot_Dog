@@ -1,3 +1,9 @@
 @echo off
-start "" "D:\Python\pythonw.exe" "%~dp0baseline\go2_jazzy\launcher.py"
+cd /d "%~dp0"
+where pyw >nul 2>nul
+if not errorlevel 1 (
+  start "" pyw -3 "%~dp0baseline\desktop_install\launcher.py" %*
+) else (
+  pythonw "%~dp0baseline\desktop_install\launcher.py" %*
+)
 exit /b

@@ -9,6 +9,7 @@
     "world IMU system",
     "headless simulation launch option",
     "optional localization nodes for walking-only task",
-    "controller activation before physics startup"
+    "controller activation before physics startup",
+    "head collision envelope measured from transformed visual mesh"
   ]
 }

@@ -9,9 +9,11 @@ import ctypes as C
 import json
 from pathlib import Path
 import winreg
+import sys
 
-ROOT = Path(r'E:\RobotDogRuntime\jazzy')
-EXE = ROOT.parent/'qemu'/'qemu-go2-jazzy.exe'
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'desktop_install'))
+from common import ensure_config, DEFAULT_CONFIG
+ROOT = EXE = None
 PROFILE_NAME = 'Go2 ROS2 Jazzy CHAMP (project only)'
 U32, Handle = C.c_uint32, C.c_void_p
 Unicode = C.c_wchar*2048
@@ -204,7 +206,14 @@ def ensure():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('action', choices=['inspect','ensure','restore'], default='inspect', nargs='?')
-    action = parser.parse_args().action
+    parser.add_argument('--config', type=Path, default=DEFAULT_CONFIG)
+    args = parser.parse_args()
+    config = ensure_config(args.config)
+    ROOT = Path(config['runtime'])/'jazzy'
+    EXE = Path(config['qemu'])
+    if EXE.name.casefold() != 'qemu-go2-jazzy.exe':
+        raise RuntimeError('独显配置仅适用于机器狗专用 QEMU 程序，不修改通用程序。')
+    action = args.action
     if action == 'ensure':
         result = ensure()
     else:

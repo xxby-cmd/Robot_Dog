@@ -6,14 +6,14 @@ import tkinter as tk
 from tkinter import messagebox
 import queue
 import subprocess
-from common import DEFAULT_CONFIG, load_config
+from common import DEFAULT_CONFIG, ensure_config
 import vm
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=Path, default=DEFAULT_CONFIG)
     try:
-        config = load_config(parser.parse_args().config)
+        config = ensure_config(parser.parse_args().config)
     except (RuntimeError, OSError, ValueError) as error:
         root = tk.Tk()
         root.withdraw()
@@ -22,11 +22,12 @@ def main():
         return
     root = tk.Tk()
     root.title('Go2 行走仿真 · 本机部署')
-    root.geometry('530x470')
+    root.geometry('530x530')
     status = tk.StringVar(value='准备启动本机的独立仿真环境。')
     tk.Label(root, text='Go2 行走仿真', font=('Microsoft YaHei UI',22,'bold')).pack(pady=(22,8))
     tk.Label(root, text='Ubuntu 24.04 · ROS2 Jazzy · Gazebo Harmonic · CHAMP').pack(pady=5)
     busy = False
+    closing = False
     messages = queue.Queue()
     cancelled = threading.Event()
     buttons = []
@@ -41,10 +42,13 @@ def main():
         status.set('正在处理，请稍候……')
         def work():
             try:
-                if action == 'start':
+                if action in ('start', 'update'):
                     vm.start(config, progress=lambda text:messages.put(('status', text)))
                     text = vm.wait_for_graphics(config, progress=lambda text:messages.put(('status', text)),
                                                 cancel_event=cancelled)
+                    if not cancelled.is_set():
+                        from bootstrap import update_project
+                        text = update_project(config, lambda text:messages.put(('status', text)), allow_pending=True)
                 elif action == 'stop':
                     vm.shutdown(config)
                     text = '已正常关闭，磁盘已释放。'
@@ -59,7 +63,7 @@ def main():
             finally:
                 messages.put(('done', None))
         threading.Thread(target=work, daemon=True).start()
-    for label, action in [('启动行走环境','start'),('安全关闭虚拟机','stop'),('检查实际显卡','gpu')]:
+    for label, action in [('启动行走环境','start'),('应用工程更新','update'),('安全关闭虚拟机','stop'),('检查实际显卡','gpu')]:
         button = tk.Button(root, text=label, width=30, pady=6, command=lambda action=action:run(action))
         button.pack(pady=5)
         buttons.append(button)
@@ -75,11 +79,19 @@ def main():
                 status.set(text)
             elif kind == 'done':
                 busy = False
+                if closing:
+                    root.destroy()
+                    return
                 for button in buttons:
                     button.configure(state='normal')
         root.after(100, poll)
     def close():
+        nonlocal closing
         cancelled.set()
+        if busy:
+            closing = True
+            status.set('正在结束检查或完成当前更新，随后关闭窗口。')
+            return
         root.destroy()
     root.protocol('WM_DELETE_WINDOW', close)
     root.after(100, poll)
