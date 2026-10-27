@@ -5,7 +5,7 @@ import sys
 import tarfile
 from common import REPO, SOURCE
 
-TOOLS = ['start-simulation.sh', 'start-panel.sh', 'robot-dog-panel.py', 'teleop_settings.py', 'start_physics.py',
+TOOLS = ['start-simulation.sh', 'start-sensors.sh', 'start-panel.sh', 'robot-dog-panel.py', 'teleop_settings.py', 'sensor_viewer.py', 'verify_sensors.py', 'start_physics.py',
          'verify_walking.py', 'measure_performance.py', 'focus_robot.py', 'capture_guest.py', 'walking.gui.config']
 
 def package_source(destination):

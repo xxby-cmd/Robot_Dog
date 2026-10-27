@@ -31,11 +31,12 @@ node = rclpy.create_node('go2_graphical_teleop')
 publisher = node.create_publisher(Twist, '/cmd_vel', 10)
 controller_client = node.create_client(ListControllers, '/controller_manager/list_controllers')
 root = tk.Tk()
-root.title('Go2 行走控制 · ROS2 CHAMP')
-root.geometry('430x690+10+35')
+root.title('Go2 行走与传感器 · ROS2 CHAMP')
+root.geometry('430x720+10+25')
 root.attributes('-topmost', True)
 root.configure(bg='#f5f7fa')
 status = tk.StringVar(value='准备启动行走仿真。')
+with_sensors = tk.BooleanVar(value=True)
 sensor_status = tk.StringVar(value='等待关节与 IMU 数据……')
 gpu_status = tk.StringVar(value='显卡：等待实际检测')
 gpu_verified = False
@@ -191,7 +192,8 @@ def start():
         threading.Thread(target=check, daemon=True).start()
         return
     log = log_path.open('a')
-    process = subprocess.Popen(['/home/robot/bin/start-simulation.sh'], stdout=log,
+    entry = 'start-sensors.sh' if with_sensors.get() else 'start-simulation.sh'
+    process = subprocess.Popen(['/home/robot/bin/'+entry], stdout=log,
                                stderr=subprocess.STDOUT, start_new_session=True)
     log.close()
     status.set('正在加载 Go2、物理场景和 CHAMP 控制器……')
@@ -261,6 +263,9 @@ tk.Label(root, textvariable=gpu_status, wraplength=400, bg='#f5f7fa', fg='#52607
 tk.Label(root, textvariable=speed_status, bg='#f5f7fa', fg='#526071').pack(pady=3)
 tk.Button(root, text='速度调参', command=tune_speeds, width=26, pady=5).pack(pady=3)
 tk.Button(root, text='启动仿真', command=start, width=26, pady=6).pack(pady=4)
+tk.Checkbutton(root, text='启用激光、深度相机与里程计（重启仿真生效）', variable=with_sensors, bg='#f5f7fa').pack()
+tk.Button(root, text='查看实时传感器', width=26,
+          command=lambda: subprocess.Popen(['python3', '/home/robot/bin/sensor_viewer.py'])).pack(pady=4)
 pad = tk.Frame(root, bg='#f5f7fa')
 pad.pack(pady=10)
 for text, row, col, action in [

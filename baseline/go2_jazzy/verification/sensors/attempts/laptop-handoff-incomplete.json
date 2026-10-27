@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-27",
+  "result": "INCOMPLETE",
+  "scope": "sensor integration handoff; no final pass",
+  "user_stopped_laptop_work": true,
+  "observations": [
+    "Two SDL VM boots stopped near VirtIO framebuffer initialization; QMP and SSH did not respond.",
+    "GTK VM boot succeeded with accelerated VirGL on NVIDIA RTX 4060 Laptop GPU.",
+    "Gazebo world services did not become ready; no final sensor or motion verification was completed.",
+    "Old motion trial failed on body tilt; earlier performance samples are retained separately."
+  ],
+  "final_host_state": "VM normally powered off and disk release confirmed",
+  "merged_checks_only": ["Python syntax", "conflict markers", "payload files"],
+  "next_host": "desktop"
+}

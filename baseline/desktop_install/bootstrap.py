@@ -130,6 +130,10 @@ with tempfile.TemporaryDirectory(prefix='robotdog-update-',dir=home/'.cache') as
 print('Previous source preserved; new source and tools copied',flush=True)
 PY
 source /opt/ros/jazzy/setup.bash
+if ! python3 -c 'import numpy; from sensor_msgs_py import point_cloud2'; then
+  sudo -n apt-get update
+  sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ros-jazzy-sensor-msgs-py python3-numpy
+fi
 cd /home/robot/ros2_ws
 colcon build --parallel-workers 3 --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
 '''

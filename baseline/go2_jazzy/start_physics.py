@@ -33,7 +33,9 @@ def main():
         request.activate_controllers = names
         request.strictness = SwitchController.Request.STRICT
         request.activate_asap = True
-        request.timeout.sec = 10
+        # GPU sensors may compile shaders during the first physics/render tick.
+        # Keep the switch pending through that warm-up; fail closed if it never activates.
+        request.timeout.sec = 60
         future = switching.call_async(request)
         for _ in range(5):
             rclpy.spin_once(node, timeout_sec=0.02)
@@ -42,7 +44,7 @@ def main():
         result = subprocess.run(command, text=True, capture_output=True, timeout=15)
         if result.returncode or 'true' not in result.stdout:
             raise RuntimeError(f'Cannot start physics: {result.stdout} {result.stderr}')
-        rclpy.spin_until_future_complete(node, future, timeout_sec=15)
+        rclpy.spin_until_future_complete(node, future, timeout_sec=65)
         if not future.done() or not future.result().ok:
             subprocess.run(command[:-1]+['pause: true'], capture_output=True, timeout=15)
             raise RuntimeError('Controller activation failed; physics paused again')

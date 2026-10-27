@@ -1,0 +1,52 @@
+{
+  "result": "FAIL",
+  "scope": "sensor streams, timestamps, TF, feedback odometry",
+  "motion_test": true,
+  "truth_usage": "evaluation only; never fused",
+  "thresholds": {
+    "distance_error_m": "max(0.12, 0.35 * actual displacement)",
+    "yaw_error_rad": 0.15,
+    "stop_drift_m": 0.08
+  },
+  "motion": {
+    "forward": {
+      "odom_forward_m": 0.2994727684976989,
+      "odom_yaw_rad": -0.003976977831737061,
+      "truth_forward_m": 0.3193086731336858,
+      "truth_yaw_rad": -0.019422035527607545,
+      "distance_error_m": 0.019835904635986945,
+      "yaw_error_rad": 0.015445057695870486
+    },
+    "reverse": {
+      "odom_forward_m": -0.34519437422697064,
+      "odom_yaw_rad": -0.06302434470355803,
+      "truth_forward_m": -0.5114027142250762,
+      "truth_yaw_rad": -0.06794108051534173,
+      "distance_error_m": 0.16620833999810558,
+      "yaw_error_rad": 0.004916735811783701
+    },
+    "left": {
+      "odom_forward_m": 0.016320052406222727,
+      "odom_yaw_rad": 0.6746516279493551,
+      "truth_forward_m": -0.09210915956507705,
+      "truth_yaw_rad": 0.6854809744937022,
+      "distance_error_m": 0.10842921197129977,
+      "yaw_error_rad": 0.010829346544347085
+    }
+  },
+  "error": "Body tilted; stopping",
+  "received": [
+    "clock",
+    "imu",
+    "camera_info",
+    "depth",
+    "rgb",
+    "cloud",
+    "joints",
+    "contacts",
+    "leg",
+    "truth",
+    "odom"
+  ],
+  "wall_seconds": 205.314662574
+}

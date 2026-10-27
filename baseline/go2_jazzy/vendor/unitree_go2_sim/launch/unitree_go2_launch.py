@@ -98,6 +98,12 @@ def generate_launch_description():
         " disable_d455:=", LaunchConfiguration("disable_d455"),
         " disable_lidar_l1:=", LaunchConfiguration("disable_lidar_l1"),
         " disable_velodyne_lidar:=", LaunchConfiguration("disable_velodyne_lidar"),
+        " camera_width:=", LaunchConfiguration("camera_width"),
+        " camera_height:=", LaunchConfiguration("camera_height"),
+        " camera_rate:=", LaunchConfiguration("camera_rate"),
+        " lidar_samples:=", LaunchConfiguration("lidar_samples"),
+        " lidar_channels:=", LaunchConfiguration("lidar_channels"),
+        " lidar_rate:=", LaunchConfiguration("lidar_rate"),
     ])
     robot_description = {"robot_description": description_command}
 
@@ -270,7 +276,6 @@ def generate_launch_description():
         arguments=[
             '/d455/image@sensor_msgs/msg/Image[gz.msgs.Image',
             '/d455/depth_image@sensor_msgs/msg/Image[gz.msgs.Image',
-            '/d455/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
             '/d455/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
         ],
         condition=UnlessCondition(LaunchConfiguration('disable_d455')),
@@ -281,7 +286,7 @@ def generate_launch_description():
         executable='parameter_bridge',
         name='lidar_l1_bridge',
         output='screen',
-        arguments=[ '/unitree_lidar/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked', ],
+        arguments=[ '/unitree_lidar/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked', ],
         condition=UnlessCondition(LaunchConfiguration('disable_lidar_l1')),
     )
 
@@ -357,6 +362,12 @@ def generate_launch_description():
             declare_disable_d455,
             declare_disable_lidar_l1,
             declare_disable_velodyne_lidar,
+            DeclareLaunchArgument('camera_width', default_value='640'),
+            DeclareLaunchArgument('camera_height', default_value='480'),
+            DeclareLaunchArgument('camera_rate', default_value='15'),
+            DeclareLaunchArgument('lidar_samples', default_value='600'),
+            DeclareLaunchArgument('lidar_channels', default_value='30'),
+            DeclareLaunchArgument('lidar_rate', default_value='10'),
 
             # Parameters
             SetParameter(name="use_sim_time", value=use_sim_time),

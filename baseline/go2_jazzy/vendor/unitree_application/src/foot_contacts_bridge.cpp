@@ -62,10 +62,9 @@ class FootContactsBridge : public rclcpp::Node
   private:
     bool hasContact_(const ros_gz_interfaces::msg::Contacts &msg) const
     {
-        // Gazebo publishes contacts only when they happen, just getting a msg tells that there are contacts,
-        // so no need for additional checking without threshold (min_normal_force_ <= 0.0).
+        // Some versions send empty messages when a foot leaves the ground.
         if (min_normal_force_ <= 0.0)
-            return true;
+            return !msg.contacts.empty();
 
         // The penetration depths Gazebo reports for the feet are numerically zero, so the only usable
         // measure of how firmly a foot is planted is the contact wrench
@@ -92,7 +91,6 @@ class FootContactsBridge : public rclcpp::Node
     void publishContacts_()
     {
         const rclcpp::Time now = this->get_clock()->now();
-        rclcpp::Time newest(0, 0, now.get_clock_type());
 
         champ_msgs::msg::ContactsStamped contacts_msg;
         contacts_msg.contacts.resize(contact_topics_.size());
@@ -105,14 +103,10 @@ class FootContactsBridge : public rclcpp::Node
 
             contacts_msg.contacts[i] = fresh && in_contact_[i];
 
-            if (last_msg_time_[i] > newest)
-                newest = last_msg_time_[i];
         }
 
-        // timestamp has to keep advancing for state_estimation node to work even when every foot is airborne,
-        // so update timestamp with `now` if `last_msg_time_` is too old
-        const bool newest_is_fresh = newest.nanoseconds() > 0 && (now - newest).seconds() < contact_timeout_;
-        contacts_msg.header.stamp = newest_is_fresh ? newest : now;
+        // This is the current contact estimate, guarded by individual sensor ages.
+        contacts_msg.header.stamp = now;
 
         foot_contacts_publisher_->publish(contacts_msg);
     }
