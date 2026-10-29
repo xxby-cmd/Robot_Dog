@@ -74,6 +74,6 @@
     "wall_seconds": 118.12050225500002,
     "real_time_factor": 0.304604190746886
   },
-  "push_authorized": false,
+  "push_authorized": true,
   "laptop_tested": false
 }
