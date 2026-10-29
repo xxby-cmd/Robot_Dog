@@ -125,8 +125,9 @@
     "shared_update_installs_dependencies": true,
     "machine_local_configuration_preserved": true,
     "generated_maps_and_runtime_disks_excluded_from_git": true,
-    "push_authorized": false,
-    "pushed": false,
+    "push_authorized": true,
+    "pushed_at_test_completion": false,
+    "publication_status": "本批用户已授权发布；最终状态以远端推送核对为准",
     "test_mapper_stopped_walking_simulator_preserved": true
   }
 }
