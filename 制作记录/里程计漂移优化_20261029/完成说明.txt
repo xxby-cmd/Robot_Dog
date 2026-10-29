@@ -13,6 +13,6 @@
 重复验证使用共享baseline/desktop_install/vm.py的exec入口调用来宾~/bin/verify_sensors.py，加 --motion --motion-profile standard（或reverse-first）--max-cumulative-error .10，并指定新的唯一输出目录。会实际低速运动，请勿同时操作方向按钮。
 仓库保留代码、简明结果与必要报告；完整原始轨迹、诊断脚本、日志、运行盘和源码归档只在台式机保存。
 
-限制：短程平地仿真自测，不等于长期绝对定位、台阶/坡地、实体设备或用户验收。中间一次测试出现来宾多个系统进程SEGV及init panic，已排除该不完整组并保存现场、恢复运行；THP关闭并未根治，长期虚拟化稳定性仍需另查。笔记本未实机复测；未进入SLAM/YOLO/导航。本轮尚未推送。
+限制：短程平地仿真自测，不等于长期绝对定位、台阶/坡地、实体设备或用户验收。中间一次测试出现来宾多个系统进程SEGV及init panic，已排除该不完整组并保存现场、恢复运行；THP关闭并未根治，长期虚拟化稳定性仍需另查。笔记本未实机复测；未进入SLAM/YOLO/导航。用户于2026-10-29授权推送本批里程计改动，代码提交4776d75，发布结果以远端提交核对为准。
 
 最终证据：final_standard_report.json/trace.csv，final_reverse_first_report.json/trace.csv，final_cold_static_report.json，C++实际测试.txt，保全与重启.json，完成核验.json。原始诊断与中间失败记录保留本机，不用中间最好结果代替最终版本。
