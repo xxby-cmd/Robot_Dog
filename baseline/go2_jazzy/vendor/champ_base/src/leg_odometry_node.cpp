@@ -6,6 +6,7 @@
 #include <memory>
 #include <rclcpp/rclcpp.hpp>
 #include <champ/utils/urdf_loader.h>
+#include <champ_base/stance_velocity.hpp>
 #include <champ_msgs/msg/contacts_stamped.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <sensor_msgs/msg/imu.hpp>
@@ -56,7 +57,7 @@ class LegOdometry : public rclcpp::Node
     const auto &w = imu_->angular_velocity;
     const tf2::Vector3 omega(w.x, w.y, w.z);
     const double dt = (stamp - previous_time_).seconds();
-    tf2::Vector3 velocity(0, 0, 0);
+    std::array<std::array<double, 3>, 4> estimates{};
     double height = 0.0;
     int used = 0, grounded = 0;
     for (size_t i = 0; i < 4; ++i) {
@@ -71,7 +72,7 @@ class LegOdometry : public rclcpp::Node
       if (contact && previous_contact_[i] && dt > 0.0001 && dt < 0.10) {
         const tf2::Vector3 estimate = -(position - previous_[i]) / dt - omega.cross(position);
         if (std::isfinite(estimate.length2()) && estimate.length() < 2.0) {
-          velocity += estimate;
+          estimates[used] = {estimate.x(), estimate.y(), estimate.z()};
           ++used;
         }
       }
@@ -81,7 +82,7 @@ class LegOdometry : public rclcpp::Node
     }
     previous_time_ = stamp;
     if (!grounded) return;
-    if (used) velocity /= used;
+    const auto estimate = champ_base::stance_velocity(estimates, used);
     nav_msgs::msg::Odometry out;
     out.header = msg->header;
     out.header.frame_id = "odom";
@@ -89,12 +90,13 @@ class LegOdometry : public rclcpp::Node
     // x/y/yaw are NOT estimates and are excluded from EKF pose fusion.
     out.pose.pose.position.z = height / grounded;
     out.pose.pose.orientation.w = 1.0;
-    out.twist.twist.linear.x = velocity.x();
-    out.twist.twist.linear.y = velocity.y();
-    out.twist.twist.linear.z = velocity.z();
+    out.twist.twist.linear.x = estimate.velocity[0];
+    out.twist.twist.linear.y = estimate.velocity[1];
+    out.twist.twist.linear.z = estimate.velocity[2];
     for (int i : {0, 7, 35, 21, 28}) out.pose.covariance[i] = 1e6;
     out.pose.covariance[14] = 0.0025;
-    for (int i : {0, 7, 14}) out.twist.covariance[i] = used >= 2 ? 0.01 : 1.0;
+    for (std::size_t axis = 0; axis < 3; ++axis)
+      out.twist.covariance[axis * 7] = estimate.variance[axis];
     for (int i : {21, 28, 35}) out.twist.covariance[i] = 1e6;
     publisher_->publish(out);
   }

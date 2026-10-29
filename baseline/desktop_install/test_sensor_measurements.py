@@ -10,7 +10,7 @@ except ImportError:
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'go2_jazzy'))
 if np is not None:
     from sensor_measurements import (centre_depth, depth_array, forward_clearance, motion_metrics,
-                                     plane_intersections, rotation)
+                                     plane_intersections, rotation, motion_sequence, cumulative_motion_metrics, stream_timing)
 
 
 @unittest.skipUnless(np is not None,'Geometry tests need NumPy; Windows launcher itself does not')
@@ -64,6 +64,35 @@ class MeasurementsTests(unittest.TestCase):
         self.assertAlmostEqual(result['truth_forward_m'],1)
         self.assertAlmostEqual(result['odom_forward_m'],1.2)
         self.assertAlmostEqual(result['position_error_m'],.2)
+
+    def test_cumulative_gate_does_not_hide_error_behind_phase_passes(self):
+        start={'odom_x':10,'odom_y':20,'odom_yaw':0,
+               'truth_x':-3,'truth_y':4,'truth_yaw':0}
+        end={**start,'odom_x':10.14}
+        result=cumulative_motion_metrics(start,end,.10)
+        self.assertFalse(result['within_limit'])
+        self.assertTrue(result['cumulative_drift_warning'])
+        self.assertAlmostEqual(result['position_error_m'],.14)
+        self.assertTrue(cumulative_motion_metrics(start,start,.10)['within_limit'])
+        for limit in [0,-1,float('inf'),float('nan')]:
+            with self.assertRaises(ValueError):cumulative_motion_metrics(start,end,limit)
+
+    def test_held_out_profile_changes_order_speeds_and_durations(self):
+        standard=motion_sequence()
+        alternate=motion_sequence('reverse-first')
+        self.assertEqual({p[0] for p in standard},{p[0] for p in alternate})
+        self.assertEqual(alternate[0][0],'reverse')
+        self.assertGreater(sum(p[1] for p in alternate),sum(p[1] for p in standard))
+        with self.assertRaises(ValueError):motion_sequence('missing')
+
+    def test_duplicate_sensor_messages_cannot_inflate_sampling_rate(self):
+        timing=stream_timing([0.,0.,.01,.01,.02,.02])
+        self.assertEqual(timing['duplicate_timestamps'],3)
+        self.assertEqual(timing['unique_messages'],3)
+        self.assertEqual(timing['sim_hz'],100.)
+        self.assertEqual(timing['message_hz'],250.)
+        self.assertEqual(stream_timing([0.,.005,.01])['sim_hz'],200.)
+        with self.assertRaises(ValueError):stream_timing([1.,1.])
 
 
 if __name__=='__main__':unittest.main()

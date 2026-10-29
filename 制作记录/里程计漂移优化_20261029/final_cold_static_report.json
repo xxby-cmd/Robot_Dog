@@ -1,0 +1,160 @@
+{
+  "result": "PASS",
+  "scope": "sensor streams, timestamps, TF, feedback odometry",
+  "motion_test": false,
+  "motion_profile": null,
+  "truth_usage": "evaluation only; never fused",
+  "thresholds": {
+    "distance_error_m": "max(0.12, 0.35 * actual displacement)",
+    "distance_error_definition": "2D endpoint displacement in each source starting-body frame",
+    "yaw_error_rad": 0.15,
+    "stop_drift_m": 0.08
+  },
+  "streams": {
+    "/unitree_lidar/points": {
+      "messages": 52,
+      "unique_messages": 52,
+      "duplicate_timestamps": 0,
+      "sim_hz": 10.0,
+      "message_hz": 10.0,
+      "frame": "lidar_l1_link",
+      "nonmonotonic": 0
+    },
+    "/d455/image": {
+      "messages": 52,
+      "unique_messages": 52,
+      "duplicate_timestamps": 0,
+      "sim_hz": 10.0,
+      "message_hz": 10.0,
+      "frame": "d455_camera_optical_frame",
+      "nonmonotonic": 0
+    },
+    "/d455/depth_image": {
+      "messages": 40,
+      "unique_messages": 40,
+      "duplicate_timestamps": 0,
+      "sim_hz": 7.8,
+      "message_hz": 7.8,
+      "frame": "d455_camera_optical_frame",
+      "nonmonotonic": 0
+    },
+    "/d455/camera_info": {
+      "messages": 52,
+      "unique_messages": 52,
+      "duplicate_timestamps": 0,
+      "sim_hz": 10.0,
+      "message_hz": 10.0,
+      "frame": "d455_camera_optical_frame",
+      "nonmonotonic": 0
+    },
+    "/imu/data": {
+      "messages": 1036,
+      "unique_messages": 1036,
+      "duplicate_timestamps": 0,
+      "sim_hz": 200.0386548125242,
+      "message_hz": 200.0386548125242,
+      "frame": "imu_link",
+      "nonmonotonic": 0
+    },
+    "/joint_states": {
+      "messages": 1293,
+      "unique_messages": 1291,
+      "duplicate_timestamps": 2,
+      "sim_hz": 249.66131217340816,
+      "message_hz": 250.0483839752274,
+      "frame": "base_link",
+      "nonmonotonic": 0
+    },
+    "/foot_contacts": {
+      "messages": 1294,
+      "unique_messages": 1294,
+      "duplicate_timestamps": 0,
+      "sim_hz": 249.99999999999997,
+      "message_hz": 249.99999999999997,
+      "frame": "",
+      "nonmonotonic": 0
+    },
+    "/odom/leg": {
+      "messages": 1146,
+      "unique_messages": 1144,
+      "duplicate_timestamps": 2,
+      "sim_hz": 228.05267358339987,
+      "message_hz": 228.4517158818835,
+      "frame": "odom",
+      "nonmonotonic": 0
+    },
+    "/odom": {
+      "messages": 258,
+      "unique_messages": 258,
+      "duplicate_timestamps": 0,
+      "sim_hz": 49.99999999999999,
+      "message_hz": 49.99999999999999,
+      "frame": "odom",
+      "nonmonotonic": 0
+    },
+    "/odom/ground_truth": {
+      "messages": 258,
+      "unique_messages": 258,
+      "duplicate_timestamps": 0,
+      "sim_hz": 49.99999999999999,
+      "message_hz": 49.99999999999999,
+      "frame": "odom",
+      "nonmonotonic": 0
+    },
+    "/clock": {
+      "messages": 3654,
+      "unique_messages": 3654,
+      "duplicate_timestamps": 0,
+      "sim_hz": 705.6210160324513,
+      "message_hz": 705.6210160324513,
+      "frame": "",
+      "nonmonotonic": 0
+    }
+  },
+  "tf": {
+    "lidar_l1_link": {
+      "from": "odom",
+      "at_sim_time": 4.9270000000000005
+    },
+    "d455_camera_optical_frame": {
+      "from": "odom",
+      "at_sim_time": 4.9270000000000005
+    },
+    "imu_link": {
+      "from": "odom",
+      "at_sim_time": 4.9270000000000005
+    }
+  },
+  "rgb": {
+    "stddev": 33.62084614222897
+  },
+  "depth": {
+    "finite_pixels": 38313,
+    "min_m": 0.44387248158454895,
+    "max_m": 9.378357887268066
+  },
+  "lidar": {
+    "finite_points": 1011,
+    "width": 360,
+    "height": 16
+  },
+  "camera_intrinsics": [
+    173.6534256826495,
+    0.0,
+    160.0,
+    0.0,
+    173.6534256826495,
+    120.0,
+    0.0,
+    0.0,
+    1.0
+  ],
+  "camera_size": [
+    320,
+    240
+  ],
+  "height_difference_m": 1.3912733791421328e-06,
+  "sim_seconds": 5.008,
+  "wall_seconds": 33.5029659,
+  "average_real_time_factor": 0.14947930326371492
+}

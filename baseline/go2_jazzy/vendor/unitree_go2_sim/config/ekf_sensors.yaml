@@ -20,10 +20,15 @@ sensor_ekf:
                    false, false, false]
     odom0_queue_size: 20
     imu0: /imu/data
-    # No absolute simulated yaw or acceleration-integrated translation.
+    # Measured acceleration predicts velocity during contact transitions;
+    # supporting-foot velocities still bound integration drift. No truth or
+    # command-derived measurements, and no absolute simulated yaw fusion.
     imu0_config: [false, false, false,
                   true, true, false,
                   false, false, false,
                   true, true, true,
-                  false, false, false]
+                  true, true, true]
     imu0_queue_size: 30
+    imu0_remove_gravitational_acceleration: true
+    # The supplied SDF world's default gravity is 9.8 m/s^2.
+    gravitational_acceleration: 9.8

@@ -82,3 +82,36 @@ def motion_metrics(start,end):
     change=values['odom_yaw_rad']-values['truth_yaw_rad']
     values['yaw_error_rad']=abs(math.atan2(math.sin(change),math.cos(change)))
     return values
+
+
+def motion_sequence(profile='standard'):
+    if profile == 'standard':
+        return [('forward',3,.15,0), ('reverse',3,-.12,0),
+                ('left',2,0,.25), ('right',2,0,-.25)]
+    if profile == 'reverse-first':
+        return [('reverse',4,-.10,0), ('right',3,0,-.20),
+                ('forward',5,.12,0), ('left',3,0,.20)]
+    raise ValueError('Unknown motion profile: '+str(profile))
+
+
+def stream_timing(stamps):
+    """Count distinct sensor instants; repeated messages are not new samples."""
+    if len(stamps) < 2 or stamps[-1] <= stamps[0]:
+        raise ValueError('Stream has no advancing interval')
+    unique = len(set(stamps))
+    elapsed = stamps[-1] - stamps[0]
+    return {'messages': len(stamps), 'unique_messages': unique,
+            'duplicate_timestamps': len(stamps)-unique,
+            'sim_hz': (unique-1)/elapsed, 'message_hz': (len(stamps)-1)/elapsed}
+
+
+def cumulative_motion_metrics(start, end, limit=None):
+    if limit is not None and (not math.isfinite(limit) or limit <= 0):
+        raise ValueError('Cumulative error limit must be finite and positive')
+    values = motion_metrics(start, end)
+    values['cumulative_drift_warning'] = values['position_error_m'] > .12
+    values['scope'] = 'Cumulative endpoint diagnostic; phase thresholds do not certify precise positioning'
+    if limit is not None:
+        values['limit_m'] = limit
+        values['within_limit'] = values['position_error_m'] <= limit
+    return values

@@ -24,7 +24,8 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from champ_msgs.msg import ContactsStamped
 from tf2_ros import Buffer, TransformListener, TransformException
-from sensor_measurements import depth_array, motion_metrics, plane_intersections, rotation
+from sensor_measurements import (depth_array, motion_metrics, plane_intersections, rotation,
+                                 motion_sequence, cumulative_motion_metrics, stream_timing)
 
 
 def seconds(stamp):
@@ -125,8 +126,8 @@ class Verification(Node):
         for name, kind, topic in self.topics:
             stamps = np.array(self.stamps[name])
             assert len(stamps) > 3 and stamps[-1]>stamps[0], 'No advancing stream: '+topic
-            elapsed = stamps[-1]-stamps[0]
-            hz = (len(stamps)-1)/elapsed
+            timing = stream_timing(self.stamps[name])
+            hz = timing['sim_hz']
             assert not self.nonmonotonic[name], 'Time moved backwards: '+topic
             assert time.monotonic()-self.received[name] < 4, 'Stale '+topic
             assert abs(stamps[-1]-seconds(self.latest['clock'].clock)) < 0.4, 'Clock mismatch: '+topic
@@ -135,8 +136,9 @@ class Verification(Node):
                 assert frame == expected[name], f'{topic}: wrong frame {frame}'
             if name in minimum_hz:
                 assert hz >= minimum_hz[name], f'{topic}: only {hz:.2f} sim Hz'
-            report[topic] = {'messages': len(stamps), 'sim_hz': hz, 'frame': frame,
-                              'nonmonotonic': self.nonmonotonic[name]}
+            report[topic] = {**timing, 'frame': frame, 'nonmonotonic': self.nonmonotonic[name]}
+            if name == 'imu':
+                assert timing['duplicate_timestamps'] <= len(stamps)*.01, 'Duplicate IMU measurement timestamps'
         rgb, depth, info = [self.latest[key] for key in ('rgb','depth','camera_info')]
         assert rgb.encoding=='rgb8' and depth.encoding=='32FC1'
         assert (rgb.width,rgb.height)==(depth.width,depth.height)==(info.width,info.height)
@@ -286,9 +288,16 @@ class Verification(Node):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--motion', action='store_true', help='Actually drive forward/back/left/right for odometry evaluation')
+    parser.add_argument('--motion-profile', choices=('standard','reverse-first'), default='standard',
+                        help='Independent motion order, duration and speed for odometry regression')
+    parser.add_argument('--max-cumulative-error', type=float,
+                        help='Fail if cumulative 2D endpoint error exceeds this many metres; requires --motion')
     parser.add_argument('--ranges', action='store_true', help='Check RGB-D optical Z and lidar range against two temporary walls')
     parser.add_argument('--output', default='/home/robot/sensor-verification')
     args = parser.parse_args()
+    if args.max_cumulative_error is not None:
+        if not args.motion or not math.isfinite(args.max_cumulative_error) or args.max_cumulative_error <= 0:
+            parser.error('--max-cumulative-error requires --motion and a finite positive limit')
     output = Path(args.output)
     output.mkdir(parents=True, exist_ok=True)
     lock_path=Path.home()/'.cache/robot-dog-sensor-verification.lock'
@@ -304,7 +313,8 @@ def main():
     signal.signal(signal.SIGINT, lambda *_: setattr(node, 'interrupted', True))
     signal.signal(signal.SIGHUP, lambda *_: setattr(node, 'interrupted', True))
     report = {'result':'FAIL', 'scope':'sensor streams, timestamps, TF, feedback odometry',
-              'motion_test':args.motion, 'truth_usage':'evaluation only; never fused',
+              'motion_test':args.motion, 'motion_profile':args.motion_profile if args.motion else None,
+              'truth_usage':'evaluation only; never fused',
               'thresholds': {'distance_error_m':'max(0.12, 0.35 * actual displacement)',
                              'distance_error_definition':'2D endpoint displacement in each source starting-body frame',
                              'yaw_error_rad':0.15, 'stop_drift_m':0.08}}
@@ -323,8 +333,7 @@ def main():
         if args.motion:
             report['motion'] = {}
             motion_origin=node.sample()
-            for name, duration, forward, turn in [('forward',3,0.15,0), ('reverse',3,-0.12,0),
-                                                  ('left',2,0,0.25), ('right',2,0,-0.25)]:
+            for name, duration, forward, turn in motion_sequence(args.motion_profile):
                 a,b = node.phase(name,duration,forward,turn)
                 values = motion_metrics(a,b)
                 report['motion'][name]=values
@@ -343,9 +352,9 @@ def main():
             report['stop_truth_drift_m']=math.hypot(b['truth_x']-a['truth_x'],b['truth_y']-a['truth_y'])
             assert report['stop_truth_drift_m']<0.08,'Actual robot drifts at rest'
             assert drift<0.08, 'Odometry drifts at rest'
-            report['motion_summary']=motion_metrics(motion_origin,b)
-            report['motion_summary']['cumulative_drift_warning']=report['motion_summary']['position_error_m']>.12
-            report['motion_summary']['scope']='Cumulative endpoint diagnostic; phase thresholds do not certify precise positioning'
+            report['motion_summary']=cumulative_motion_metrics(motion_origin,b,args.max_cumulative_error)
+            if args.max_cumulative_error is not None:
+                assert report['motion_summary']['within_limit'], 'Excessive cumulative 2D endpoint error'
         report.update(node.check_streams())
         report['height_difference_m']=abs(node.latest['odom'].pose.pose.position.z-node.latest['truth'].pose.pose.position.z)
         assert report['height_difference_m']<0.06, 'Incorrect body height / TF'

@@ -1,0 +1,187 @@
+{
+  "result": "PASS",
+  "scope": "sensor streams, timestamps, TF, feedback odometry",
+  "motion_test": true,
+  "truth_usage": "evaluation only; never fused",
+  "thresholds": {
+    "distance_error_m": "max(0.12, 0.35 * actual displacement)",
+    "distance_error_definition": "2D endpoint displacement in each source starting-body frame",
+    "yaw_error_rad": 0.15,
+    "stop_drift_m": 0.08
+  },
+  "motion": {
+    "forward": {
+      "odom_forward_m": 0.47080762841942414,
+      "odom_lateral_m": -0.04800558937697372,
+      "odom_yaw_rad": -0.1232423841543442,
+      "truth_forward_m": 0.3841221659507055,
+      "truth_lateral_m": -0.05109392841281398,
+      "truth_yaw_rad": -0.12492570874011033,
+      "distance_error_m": 0.08668546246871867,
+      "position_error_m": 0.08674045908003904,
+      "yaw_error_rad": 0.0016833245857661298
+    },
+    "reverse": {
+      "odom_forward_m": -0.3965019096796093,
+      "odom_lateral_m": -0.020072811691705782,
+      "odom_yaw_rad": -0.024284614810516025,
+      "truth_forward_m": -0.45785690677717517,
+      "truth_lateral_m": -0.002515597608898131,
+      "truth_yaw_rad": -0.02550997599239316,
+      "distance_error_m": 0.061354997097565867,
+      "position_error_m": 0.06381764203722866,
+      "yaw_error_rad": 0.0012253611818771363
+    },
+    "left": {
+      "odom_forward_m": 0.013496746539568187,
+      "odom_lateral_m": -0.007654151634748106,
+      "odom_yaw_rad": 0.45234484873796355,
+      "truth_forward_m": -0.050420750149312334,
+      "truth_lateral_m": -0.024624812339698657,
+      "truth_yaw_rad": 0.45338429686988324,
+      "distance_error_m": 0.06391749668888053,
+      "position_error_m": 0.06613206263028248,
+      "yaw_error_rad": 0.0010394481319196955
+    },
+    "right": {
+      "odom_forward_m": 0.003086426384848213,
+      "odom_lateral_m": 0.0031638401372209787,
+      "odom_yaw_rad": -0.5065336707754685,
+      "truth_forward_m": -0.05907967346183137,
+      "truth_lateral_m": 0.019744327924565812,
+      "truth_yaw_rad": -0.507145455657918,
+      "distance_error_m": 0.06216609984667958,
+      "position_error_m": 0.06433923022086623,
+      "yaw_error_rad": 0.0006117848824495065
+    }
+  },
+  "stop_odom_drift_m": 0.00015486045163103828,
+  "stop_truth_drift_m": 0.0001672190452694497,
+  "motion_summary": {
+    "odom_forward_m": 0.1144136579903309,
+    "odom_lateral_m": -0.012442925089181111,
+    "odom_yaw_rad": -0.24523356807237073,
+    "truth_forward_m": -0.18076631200897025,
+    "truth_lateral_m": 0.006532686931740258,
+    "truth_yaw_rad": -0.24523635586572967,
+    "distance_error_m": 0.2951799699993012,
+    "position_error_m": 0.2957892637340931,
+    "yaw_error_rad": 2.7877933589381954e-06,
+    "cumulative_drift_warning": true,
+    "scope": "Cumulative endpoint diagnostic; phase thresholds do not certify precise positioning"
+  },
+  "streams": {
+    "/unitree_lidar/points": {
+      "messages": 267,
+      "sim_hz": 10.000000000000002,
+      "frame": "lidar_l1_link",
+      "nonmonotonic": 0
+    },
+    "/d455/image": {
+      "messages": 262,
+      "sim_hz": 10.000000000000002,
+      "frame": "d455_camera_optical_frame",
+      "nonmonotonic": 0
+    },
+    "/d455/depth_image": {
+      "messages": 224,
+      "sim_hz": 8.576923076923077,
+      "frame": "d455_camera_optical_frame",
+      "nonmonotonic": 0
+    },
+    "/d455/camera_info": {
+      "messages": 261,
+      "sim_hz": 10.0,
+      "frame": "d455_camera_optical_frame",
+      "nonmonotonic": 0
+    },
+    "/imu/data": {
+      "messages": 5310,
+      "sim_hz": 199.43651389932378,
+      "frame": "imu_link",
+      "nonmonotonic": 0
+    },
+    "/joint_states": {
+      "messages": 6635,
+      "sim_hz": 249.1456040860781,
+      "frame": "base_link",
+      "nonmonotonic": 0
+    },
+    "/foot_contacts": {
+      "messages": 2619,
+      "sim_hz": 99.99999999999997,
+      "frame": "",
+      "nonmonotonic": 0
+    },
+    "/odom/leg": {
+      "messages": 6539,
+      "sim_hz": 249.96176785441207,
+      "frame": "odom",
+      "nonmonotonic": 0
+    },
+    "/odom": {
+      "messages": 1307,
+      "sim_hz": 50.00000000000002,
+      "frame": "odom",
+      "nonmonotonic": 0
+    },
+    "/odom/ground_truth": {
+      "messages": 1331,
+      "sim_hz": 50.000000000000014,
+      "frame": "odom",
+      "nonmonotonic": 0
+    },
+    "/clock": {
+      "messages": 18884,
+      "sim_hz": 708.9277669319715,
+      "frame": "",
+      "nonmonotonic": 0
+    }
+  },
+  "tf": {
+    "lidar_l1_link": {
+      "from": "odom",
+      "at_sim_time": 112.927
+    },
+    "d455_camera_optical_frame": {
+      "from": "odom",
+      "at_sim_time": 112.927
+    },
+    "imu_link": {
+      "from": "odom",
+      "at_sim_time": 112.927
+    }
+  },
+  "rgb": {
+    "stddev": 30.049484975764997
+  },
+  "depth": {
+    "finite_pixels": 37610,
+    "min_m": 0.44302648305892944,
+    "max_m": 9.298053741455078
+  },
+  "lidar": {
+    "finite_points": 984,
+    "width": 360,
+    "height": 16
+  },
+  "camera_intrinsics": [
+    173.6534256826495,
+    0.0,
+    160.0,
+    0.0,
+    173.6534256826495,
+    120.0,
+    0.0,
+    0.0,
+    1.0
+  ],
+  "camera_size": [
+    320,
+    240
+  ],
+  "height_difference_m": 4.717167245454901e-06,
+  "sim_seconds": 26.057000000000002,
+  "wall_seconds": 106.13670333300001,
+  "average_real_time_factor": 0.2455041393008705
+}

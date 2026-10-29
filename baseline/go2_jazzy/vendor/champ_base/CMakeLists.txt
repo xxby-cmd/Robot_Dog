@@ -69,6 +69,12 @@ add_executable(leg_odometry_node src/leg_odometry_node.cpp)
 ament_target_dependencies(leg_odometry_node ${dependencies})
 install(TARGETS leg_odometry_node DESTINATION lib/${PROJECT_NAME})
 
+if(BUILD_TESTING)
+  enable_testing()
+  add_executable(stance_velocity_test test/stance_velocity_test.cpp)
+  add_test(NAME stance_velocity_test COMMAND stance_velocity_test)
+endif()
+
 
 install(TARGETS 
     quadruped_controller

@@ -1,0 +1,91 @@
+{
+  "result": "FAIL",
+  "scope": "sensor streams, timestamps, TF, feedback odometry",
+  "motion_test": true,
+  "motion_profile": "reverse-first",
+  "truth_usage": "evaluation only; never fused",
+  "thresholds": {
+    "distance_error_m": "max(0.12, 0.35 * actual displacement)",
+    "distance_error_definition": "2D endpoint displacement in each source starting-body frame",
+    "yaw_error_rad": 0.15,
+    "stop_drift_m": 0.08
+  },
+  "motion": {
+    "reverse": {
+      "odom_forward_m": -0.43931259255750416,
+      "odom_lateral_m": -0.04305042100317489,
+      "odom_yaw_rad": 0.01065853953836849,
+      "truth_forward_m": -0.509951551513177,
+      "truth_lateral_m": -0.03593481228423526,
+      "truth_yaw_rad": 0.012653628593974148,
+      "distance_error_m": 0.07063895895567279,
+      "position_error_m": 0.070996439416229,
+      "yaw_error_rad": 0.0019950890556056575
+    },
+    "right": {
+      "odom_forward_m": -0.09406897000268111,
+      "odom_lateral_m": -0.0005194990570927672,
+      "odom_yaw_rad": -0.5716246363011619,
+      "truth_forward_m": -0.09689419610267785,
+      "truth_lateral_m": -0.004848808609620949,
+      "truth_yaw_rad": -0.5775913262529155,
+      "distance_error_m": 0.002825226099996747,
+      "position_error_m": 0.005169605760376181,
+      "yaw_error_rad": 0.005966689951753645
+    },
+    "forward": {
+      "odom_forward_m": 0.5489064780727896,
+      "odom_lateral_m": -0.042303603614486596,
+      "odom_yaw_rad": -0.0336713603103066,
+      "truth_forward_m": 0.5295867092293938,
+      "truth_lateral_m": -0.0380146698148561,
+      "truth_yaw_rad": -0.03354490209987593,
+      "distance_error_m": 0.019319768843395813,
+      "position_error_m": 0.019790109178573535,
+      "yaw_error_rad": 0.00012645821043066882
+    },
+    "left": {
+      "odom_forward_m": -0.010797609166444516,
+      "odom_lateral_m": 0.011637467369590076,
+      "odom_yaw_rad": 0.6319777664338796,
+      "truth_forward_m": -0.046392605160391044,
+      "truth_lateral_m": 0.01892693704186941,
+      "truth_yaw_rad": 0.6351976369008242,
+      "distance_error_m": 0.03559499599394653,
+      "position_error_m": 0.036333732369688496,
+      "yaw_error_rad": 0.0032198704669446077
+    }
+  },
+  "stop_odom_drift_m": 3.132652489179686e-05,
+  "stop_truth_drift_m": 6.114285818486397e-05,
+  "motion_summary": {
+    "odom_forward_m": -0.09075752167397134,
+    "odom_lateral_m": -0.33492584826520966,
+    "odom_yaw_rad": -0.03459052106880422,
+    "truth_forward_m": -0.2520470972997311,
+    "truth_lateral_m": -0.31815630243888277,
+    "truth_yaw_rad": -0.034651126667314354,
+    "distance_error_m": 0.1612895756257598,
+    "position_error_m": 0.16215901107480574,
+    "yaw_error_rad": 6.060559851013558e-05,
+    "cumulative_drift_warning": true,
+    "scope": "Cumulative endpoint diagnostic; phase thresholds do not certify precise positioning",
+    "limit_m": 0.1,
+    "within_limit": false
+  },
+  "error": "Excessive cumulative 2D endpoint error",
+  "received": [
+    "cloud",
+    "leg",
+    "odom",
+    "rgb",
+    "depth",
+    "camera_info",
+    "contacts",
+    "imu",
+    "clock",
+    "truth",
+    "joints"
+  ],
+  "wall_seconds": 126.135981125
+}

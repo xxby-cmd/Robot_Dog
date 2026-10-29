@@ -30,7 +30,10 @@ def generate_launch_description():
                 **{name: LaunchConfiguration(name) for name in ('camera_width','camera_height','camera_rate',
                     'lidar_samples','lidar_channels','lidar_rate')}}.items()),
         Node(package='unitree_application', executable='foot_contacts_bridge',
-             parameters=[common, {'contact_timeout': 0.02}], output='screen'),
+             # Contact samples arrive at the physics rate in Harmonic. Do not
+             # retain an unloaded / departed foot across several joint frames.
+             parameters=[common, {'publish_rate': 250.0, 'contact_timeout': 0.006,
+                                  'min_normal_force': 2.0}], output='screen'),
         Node(package='champ_base', executable='leg_odometry_node', parameters=[common, {'urdf': urdf},
              os.path.join(sim, 'config/joints/joints.yaml'), os.path.join(sim, 'config/links/links.yaml')], output='screen'),
         Node(package='robot_localization', executable='ekf_node', name='sensor_ekf',
