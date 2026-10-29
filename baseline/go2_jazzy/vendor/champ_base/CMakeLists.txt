@@ -73,6 +73,9 @@ if(BUILD_TESTING)
   enable_testing()
   add_executable(stance_velocity_test test/stance_velocity_test.cpp)
   add_test(NAME stance_velocity_test COMMAND stance_velocity_test)
+  add_executable(velocity_command_test test/velocity_command_test.cpp)
+  ament_target_dependencies(velocity_command_test champ)
+  add_test(NAME velocity_command_test COMMAND velocity_command_test)
 endif()
 
 

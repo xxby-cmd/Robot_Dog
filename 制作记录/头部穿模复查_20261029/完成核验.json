@@ -1,0 +1,79 @@
+{
+  "status": "台式机自测通过，参数待用户验收；头部已由用户确认为视角问题",
+  "baseline_commit": "6447faaaa9555c5e6384b023b1805a783b903ab1",
+  "baseline_tag": "codex/head-contact-baseline-20261029",
+  "branch": "codex/open-teleop-parameters-20261029",
+  "head_geometry_changed": false,
+  "head_user_confirmation": "没穿，我刚刚是视角问题",
+  "source_matches_runtime": true,
+  "source_sha256": "f6f22583ee32680f2e2c9060a675e4d02ce588fa3e9641c53c111c7295ade533",
+  "host_tests_passed": 24,
+  "cpp_tests_passed": 2,
+  "ui": {
+    "result": "PASS",
+    "commands": {
+      "forward": [
+        0.75,
+        0.0
+      ],
+      "reverse": [
+        0.4,
+        0.0
+      ],
+      "left": [
+        0.0,
+        1.2
+      ],
+      "right": [
+        0.0,
+        -1.2
+      ]
+    },
+    "native_input": false,
+    "command_topic": "/robotdog_parameter_test/cmd_vel",
+    "actual_simulation_driven": false,
+    "persisted": {
+      "forward": 0.75,
+      "reverse": -0.4,
+      "turn": 1.2
+    },
+    "held_beyond_old_10s_limit": true,
+    "zero_negative_and_small_values_preserved": true,
+    "window": {
+      "panel": [
+        430,
+        700
+      ],
+      "tuner": [
+        440,
+        360
+      ],
+      "screen": [
+        1280,
+        768
+      ]
+    }
+  },
+  "physical_walking": {
+    "result": "PASS",
+    "measurement_source": "Gazebo ground truth for evaluation only; no pose commands",
+    "controller": "CHAMP",
+    "tests": {
+      "forward_distance_m": 0.6627126322288994,
+      "stop_drift_m": 6.246742296248098e-05,
+      "left_turn_rad": 0.9034984243397403,
+      "reverse_distance_m": -0.4440348099414299,
+      "right_turn_rad": -0.9917594797962928,
+      "watchdog_drift_m": 2.748191048844892e-05,
+      "joint_count": 12,
+      "min_body_height_m": 0.2277593610722182,
+      "max_abs_roll_rad": 0.11624697796403582,
+      "max_abs_pitch_rad": 0.08071166649334306
+    },
+    "simulation_seconds": 35.980000000000004,
+    "wall_seconds": 118.12050225500002,
+    "real_time_factor": 0.304604190746886
+  },
+  "push_authorized": false,
+  "laptop_tested": false
+}

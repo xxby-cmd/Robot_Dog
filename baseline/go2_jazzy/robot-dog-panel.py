@@ -45,8 +45,6 @@ gpu_attempts = 0
 process = None
 stopping = False
 target = (0.0, 0.0)
-pressed_at = 0.0
-limit_reached = False
 key_release_job = None
 stop_until = 0.0
 joint_count = 0
@@ -67,8 +65,8 @@ speed_status = tk.StringVar()
 settings_window = None
 
 def refresh_speeds():
-    speed_status.set(f'前进 {speeds["forward"]:.2f} m/s · 后退 {speeds["reverse"]:.2f} m/s\n'
-                     f'转向 {speeds["turn"]:.2f} rad/s（{math.degrees(speeds["turn"]):.1f}°/s）')
+    speed_status.set(f'前进 {speeds["forward"]:g} m/s · 后退 {speeds["reverse"]:g} m/s\n'
+                     f'转向 {speeds["turn"]:g} rad/s')
 
 refresh_speeds()
 
@@ -93,25 +91,19 @@ def send(forward, turn):
     publisher.publish(command)
 
 def halt(event=None):
-    global target, stop_until, limit_reached
+    global target, stop_until
     target = (0.0, 0.0)
-    limit_reached = False
     stop_until = time.monotonic() + 0.3
     send(0.0, 0.0)
 
 def move(forward, turn):
-    global target, pressed_at
-    if limit_reached:
-        status.set('已达 10 秒，请松开后重新按住。')
-        return
+    global target
     if stopping or not controller_ready or time.monotonic()-controller_since < 2 or time.monotonic() - last_joint_time > 2:
         status.set('控制器尚未就绪，请等待关节数据。')
         return
     if abs(roll) > 0.45 or abs(pitch) > 0.45:
         status.set('机身倾斜，请停止仿真后重新启动。')
         return
-    if target != (forward, turn):
-        pressed_at = time.monotonic()
     target = (forward, turn)
     status.set('按住移动，松开停止。空格也可停止。')
 
@@ -136,31 +128,29 @@ def tune_speeds():
     for row, (key, label, unit) in enumerate([
         ('forward', '前进速度', 'm/s'), ('reverse', '后退速度', 'm/s'), ('turn', '转向角速度', 'rad/s')
     ]):
-        minimum, maximum = teleop_settings.LIMITS[key]
         tk.Label(form, text=label, bg='#f5f7fa').grid(row=row, column=0, sticky='w', pady=9)
-        value = fields[key] = tk.StringVar(value=f'{speeds[key]:.2f}')
-        tk.Spinbox(form, from_=minimum, to=maximum, increment=0.01, textvariable=value,
-                   width=8, format='%.2f').grid(row=row, column=1, padx=12)
-        tk.Label(form, text=f'{unit}  ·  {minimum:g}～{maximum:g}', bg='#f5f7fa').grid(row=row, column=2, sticky='w')
-    feedback = tk.StringVar(value='保存后，方向按钮与键盘立即使用新速度。')
+        value = fields[key] = tk.StringVar(value=str(speeds[key]))
+        tk.Entry(form, textvariable=value, width=15).grid(row=row, column=1, padx=12)
+        tk.Label(form, text=unit, bg='#f5f7fa').grid(row=row, column=2, sticky='w')
+    feedback = tk.StringVar(value='数值不设上下限，可填零或负数；负值反转对应方向。保存后立即生效。')
     tk.Label(window, textvariable=feedback, wraplength=390, bg='#f5f7fa', fg='#334155').pack(pady=(12, 5))
     def apply():
         global speeds
         try:
             updated = teleop_settings.save({key: value.get() for key, value in fields.items()})
         except (ValueError, OSError) as error:
-            feedback.set('未保存：请输入范围内的数字，并确认配置可写入。')
+            feedback.set('未保存：请输入有限数字，并确认配置可写入。')
             return
         halt()
         speeds = updated
         for key, value in fields.items():
-            value.set(f'{updated[key]:.2f}')
+            value.set(str(updated[key]))
         refresh_speeds()
         feedback.set('已保存并生效。机器狗保持停止，重新按住方向即可移动。')
         status.set('行走速度已更新。')
     def defaults():
         for key, value in teleop_settings.DEFAULTS.items():
-            fields[key].set(f'{value:.2f}')
+            fields[key].set(str(value))
         feedback.set('已填入默认值，点击“保存并应用”后生效。')
     actions = tk.Frame(window, bg='#f5f7fa')
     actions.pack(pady=10)
@@ -277,7 +267,7 @@ for text, row, col, action in [
     button.bind('<ButtonPress-1>', lambda event, action=action: move_action(action))
     button.bind('<ButtonRelease-1>', halt)
 tk.Button(pad, text='停止', command=halt, width=10, height=2, bg='#ffd9d9').grid(row=1, column=1)
-tk.Label(root, text='按住按钮或方向键移动；松开即停止\n空格停止，连续按住最多 10 秒', bg='#f5f7fa').pack(pady=2)
+tk.Label(root, text='按住按钮或方向键移动；松开即停止\n空格停止，移开控制窗口也会停止', bg='#f5f7fa').pack(pady=2)
 tk.Label(root, textvariable=sensor_status, bg='#f5f7fa', fg='#526071').pack(pady=3)
 
 tk.Button(root, text='居中并跟随机器狗', command=focus_robot, width=26).pack(pady=2)
@@ -308,7 +298,7 @@ def check_focus():
 root.bind('<FocusOut>', lambda event: root.after_idle(check_focus))
 
 def tick():
-    global controller_ready, controller_since, controller_future, next_controller_query, limit_reached
+    global controller_ready, controller_since, controller_future, next_controller_query
     for _ in range(4):
         rclpy.spin_once(node, timeout_sec=0)
     now = time.monotonic()
@@ -326,10 +316,6 @@ def tick():
     if now >= next_controller_query and controller_future is None and controller_client.service_is_ready():
         controller_future = controller_client.call_async(ListControllers.Request())
         next_controller_query = now+1
-    if target != (0.0, 0.0) and now - pressed_at > 10:
-        halt()
-        limit_reached = True
-        status.set('已达 10 秒，请松开后重新按住。')
     if target != (0.0, 0.0) and (now - last_joint_time > 2
                                or not controller_ready or abs(roll) > 0.45 or abs(pitch) > 0.45):
         halt()

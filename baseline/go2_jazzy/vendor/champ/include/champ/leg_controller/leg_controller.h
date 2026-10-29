@@ -42,11 +42,6 @@ namespace champ
 
             champ::TrajectoryPlanner *trajectory_planners_[4];
 
-            float capVelocities(float velocity, float min_velocity, float max_velocity)
-            {
-                return ((velocity)<(min_velocity)?(min_velocity):((velocity)>(max_velocity)?(max_velocity):(velocity)));
-            }
-
         public:
             LegController(QuadrupedBase &quadruped_base, PhaseGenerator::Time time = PhaseGenerator::now()):
                 base_(&quadruped_base),     
@@ -92,10 +87,7 @@ namespace champ
 
             void velocityCommand(geometry::Transformation (&foot_positions)[4], champ::Velocities &req_vel, PhaseGenerator::Time time = PhaseGenerator::now())
             {
-                //limit all velocities to user input
-                req_vel.linear.x = capVelocities(req_vel.linear.x, -base_->gait_config.max_linear_velocity_x, base_->gait_config.max_linear_velocity_x);
-                req_vel.linear.y = capVelocities(req_vel.linear.y, -base_->gait_config.max_linear_velocity_y, base_->gait_config.max_linear_velocity_y);
-                req_vel.angular.z = capVelocities(req_vel.angular.z, -base_->gait_config.max_angular_velocity_z, base_->gait_config.max_angular_velocity_z);
+                // Requested finite velocities reach the gait planner unchanged.
                 
                 float tangential_velocity = req_vel.angular.z * base_->lf.center_to_nominal();
                 float velocity =  sqrtf(pow(req_vel.linear.x, 2) + pow(req_vel.linear.y + tangential_velocity, 2));

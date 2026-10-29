@@ -49,18 +49,16 @@ namespace champ
             {
             }
 
-            void inverse(float (&joint_positions)[12], geometry::Transformation (&foot_positions)[4])
+            bool inverse(float (&joint_positions)[12], geometry::Transformation (&foot_positions)[4])
             {
-                float calculated_joints[12];
+                float calculated_joints[12]{};
 
                 for(unsigned int i = 0; i < 4; i++)
                 {
-                    inverse(calculated_joints[(i*3)], calculated_joints[(i*3) + 1], calculated_joints[(i*3) + 2], *base_->legs[i], foot_positions[i]);
-                    
-                    //check if any leg has invalid calculation, if so disregard the whole plan
-                    if(isnan(calculated_joints[(i*3)]) || isnan(calculated_joints[(i*3) + 1]) || isnan(calculated_joints[(i*3) + 2]))
+                    // Only commit a complete, reachable four-leg plan.
+                    if(!inverse(calculated_joints[(i*3)], calculated_joints[(i*3) + 1], calculated_joints[(i*3) + 2], *base_->legs[i], foot_positions[i]))
                     {
-                        return;
+                        return false;
                     }
                 }
                 
@@ -68,9 +66,10 @@ namespace champ
                 {
                     joint_positions[i] = calculated_joints[i];
                 }
+                return true;
             }
 
-            static void inverse(float &hip_joint, float &upper_leg_joint, float &lower_leg_joint, 
+            static bool inverse(float &hip_joint, float &upper_leg_joint, float &lower_leg_joint,
                                 champ::QuadrupedLeg &leg, geometry::Transformation &foot_position)
             {
                 geometry::Transformation temp_foot_pos = foot_position;
@@ -104,7 +103,7 @@ namespace champ
                 //reachability check
                 float target_to_foot = sqrtf(pow(x, 2) + pow(z,2));
                 if(target_to_foot >= (abs(l1) + abs(l2)))
-                    return;
+                    return false;
 
                 //source: https://robotacademy.net.au/lesson/inverse-kinematics-for-a-2-joint-robot-arm-using-geometry/
                 lower_leg_joint = leg.knee_direction() * acosf((pow(z, 2) + pow(x, 2) - pow(l1 ,2) - pow(l2 ,2)) / (2 * l1 * l2));
@@ -128,9 +127,10 @@ namespace champ
                         upper_leg_joint = upper_leg_joint +  M_PI;
                     }
                 }
+                return std::isfinite(hip_joint) && std::isfinite(upper_leg_joint) && std::isfinite(lower_leg_joint);
             }
 
-            static void forward(geometry::Transformation foot_position, const champ::QuadrupedLeg &leg, 
+            static void forward(geometry::Transformation foot_position, const champ::QuadrupedLeg &leg,
                                 const float upper_leg_theta, 
                                 const float lower_leg_theta )
             {

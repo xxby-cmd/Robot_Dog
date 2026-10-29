@@ -1,22 +1,21 @@
-"""Validated per-user walking speeds; independent of the GUI and host hardware."""
+"""Finite, user-selected walking speeds without application range limits."""
 import json
 import math
 from pathlib import Path
 
 DEFAULTS = {'forward': 0.15, 'reverse': 0.12, 'turn': 0.25}
-LIMITS = {'forward': (0.01, 0.30), 'reverse': (0.01, 0.30), 'turn': (0.05, 0.50)}
 CONFIG = Path.home() / '.config' / 'robotdog' / 'teleop.json'
 
 
 def validate(values):
     result = {}
-    for key, (minimum, maximum) in LIMITS.items():
+    for key in DEFAULTS:
         value = values[key]
         if isinstance(value, bool):
             raise ValueError('速度必须是数字')
         value = float(value)
-        if not math.isfinite(value) or not minimum <= value <= maximum:
-            raise ValueError(f'{key} 必须在 {minimum:g}～{maximum:g} 之间')
+        if not math.isfinite(value):
+            raise ValueError('速度必须是有限数字')
         result[key] = value
     return result
 

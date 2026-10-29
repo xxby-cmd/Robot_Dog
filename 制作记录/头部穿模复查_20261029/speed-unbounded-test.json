@@ -1,0 +1,45 @@
+{
+  "result": "PASS",
+  "commands": {
+    "forward": [
+      0.75,
+      0.0
+    ],
+    "reverse": [
+      0.4,
+      0.0
+    ],
+    "left": [
+      0.0,
+      1.2
+    ],
+    "right": [
+      0.0,
+      -1.2
+    ]
+  },
+  "native_input": false,
+  "command_topic": "/robotdog_parameter_test/cmd_vel",
+  "actual_simulation_driven": false,
+  "persisted": {
+    "forward": 0.75,
+    "reverse": -0.4,
+    "turn": 1.2
+  },
+  "held_beyond_old_10s_limit": true,
+  "zero_negative_and_small_values_preserved": true,
+  "window": {
+    "panel": [
+      430,
+      700
+    ],
+    "tuner": [
+      440,
+      360
+    ],
+    "screen": [
+      1280,
+      768
+    ]
+  }
+}

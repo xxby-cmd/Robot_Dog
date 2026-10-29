@@ -153,10 +153,21 @@ class PortabilityTests(unittest.TestCase):
         path=self.root/'teleop.json'
         teleop_settings.save(teleop_settings.DEFAULTS,path)
         before=path.read_bytes()
-        for value in [float('nan'),float('inf'),True,-.1,0,.31,'invalid']:
+        for value in [float('nan'),float('inf'),True,'invalid']:
             with self.subTest(value=value), self.assertRaises((ValueError,TypeError)):
                 teleop_settings.save({**teleop_settings.DEFAULTS,'forward':value},path)
             self.assertEqual(path.read_bytes(),before)
+
+    def test_unbounded_speeds_keep_sign_zero_and_precision(self):
+        path=self.root/'teleop.json'
+        for values in [{'forward':2.5,'reverse':-.4,'turn':3.75},
+                       {'forward':0.,'reverse':.000001,'turn':-1.25}]:
+            teleop_settings.save(values,path)
+            loaded=teleop_settings.load(path)
+            self.assertEqual(loaded,values)
+            self.assertEqual(teleop_settings.command('forward',loaded),(values['forward'],0))
+            self.assertEqual(teleop_settings.command('reverse',loaded),(-values['reverse'],0))
+            self.assertEqual(teleop_settings.command('right',loaded),(0,-values['turn']))
 
 
 if __name__=='__main__':

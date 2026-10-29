@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <quadruped_controller.h>
-#include <algorithm>
+#include <champ_base/velocity_command.hpp>
 #include <cmath>
 
 champ::PhaseGenerator::Time rosTimeToChampTime(const rclcpp::Time& time)
@@ -115,7 +115,11 @@ void QuadrupedController::controlLoop_()
     body_controller_.poseCommand(target_foot_positions, req_pose_);
 
     leg_controller_.velocityCommand(target_foot_positions, req_vel_, rosTimeToChampTime(clock_.now()));
-    kinematics_.inverse(target_joint_positions, target_foot_positions);
+    if (!kinematics_.inverse(target_joint_positions, target_foot_positions)) {
+        RCLCPP_WARN_THROTTLE(get_logger(), clock_, 2000,
+            "Requested gait has no finite inverse-kinematics solution; holding the last valid joint target");
+        return;
+    }
 
     publishFootContacts_(foot_contacts);
     publishJoints_(target_joint_positions);
@@ -123,12 +127,7 @@ void QuadrupedController::controlLoop_()
 
 void QuadrupedController::cmdVelCallback_(const geometry_msgs::msg::Twist::SharedPtr msg)
 {
-    auto limited = [](double value, double limit) {
-        return std::isfinite(value) ? std::clamp(value, -limit, limit) : 0.0;
-    };
-    req_vel_.linear.x = limited(msg->linear.x, 0.3);
-    req_vel_.linear.y = limited(msg->linear.y, 0.25);
-    req_vel_.angular.z = limited(msg->angular.z, 0.5);
+    req_vel_ = champ_base::velocity_command(msg->linear.x, msg->linear.y, msg->angular.z);
     last_command_ = std::chrono::steady_clock::now();
 }
 
