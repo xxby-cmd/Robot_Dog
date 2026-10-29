@@ -1,0 +1,8 @@
+{
+  "shared_seed_tools": 18,
+  "all_tools_in_first_boot_copy_list": true,
+  "linux_entry_blobs_lf": true,
+  "git_attributes_enforce_baseline_lf": true,
+  "laptop_hardware_configuration_unit_tests_passed": true,
+  "laptop_physically_tested": false
+}

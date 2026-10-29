@@ -1,0 +1,35 @@
+{
+  "result": "PASS",
+  "real_mapping_services": true,
+  "simulator_pose_commands": false,
+  "fresh_mapper_restored_previous_moving_map": true,
+  "saved_session": "/home/robot/.local/share/robotdog/maps/20261029_142416_587115/session.json",
+  "load_callback_passed": true,
+  "buttons": {
+    "开始建图": {
+      "x": 559,
+      "y": 596,
+      "width": 132,
+      "height": 37
+    },
+    "保存地图": {
+      "x": 699,
+      "y": 596,
+      "width": 132,
+      "height": 37
+    },
+    "加载并继续": {
+      "x": 839,
+      "y": 596,
+      "width": 132,
+      "height": 37
+    },
+    "停止建图": {
+      "x": 979,
+      "y": 596,
+      "width": 132,
+      "height": 37
+    }
+  },
+  "stop_callback_passed": true
+}

@@ -69,7 +69,7 @@ def alive(pid):
     except FileNotFoundError:
         return False
 launchers, panels, processes = [], [], {}
-ui_paths = {str(home/'bin'/name).encode() for name in ('robot-dog-panel.py','sensor_viewer.py')}
+ui_paths = {str(home/'bin'/name).encode() for name in ('robot-dog-panel.py','sensor_viewer.py','slam_panel.py')}
 for entry in Path('/proc').iterdir():
     if not entry.name.isdigit(): continue
     try:
@@ -134,9 +134,16 @@ with tempfile.TemporaryDirectory(prefix='robotdog-update-',dir=home/'.cache') as
 print('Previous source preserved; new source and tools copied',flush=True)
 PY
 source /opt/ros/jazzy/setup.bash
-if ! python3 -c 'import numpy; from sensor_msgs_py import point_cloud2'; then
+packages=(ros-jazzy-sensor-msgs-py python3-numpy ros-jazzy-slam-toolbox ros-jazzy-pointcloud-to-laserscan ros-jazzy-nav2-map-server)
+missing=()
+for package in "${packages[@]}"; do
+  if [ "$(dpkg-query -W -f='${Status}' "$package" 2>/dev/null || true)" != 'install ok installed' ]; then
+    missing+=("$package")
+  fi
+done
+if [ "${#missing[@]}" -gt 0 ]; then
   sudo -n apt-get update
-  sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ros-jazzy-sensor-msgs-py python3-numpy
+  sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "${missing[@]}"
 fi
 cd /home/robot/ros2_ws
 colcon build --parallel-workers 3 --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF

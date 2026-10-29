@@ -1,0 +1,81 @@
+{
+  "result": "PASS",
+  "motion": true,
+  "truth_usage": "evaluation only; never commands or SLAM inputs",
+  "algorithm": "slam_toolbox",
+  "loop_constraint_event_confirmed": false,
+  "before": {
+    "width": 171,
+    "height": 187,
+    "resolution_m": 0.05000000074505806,
+    "occupied_cells": 53,
+    "free_cells": 909,
+    "unknown_cells": 31015,
+    "map_messages": 20,
+    "scan_messages": 25,
+    "finite_scan_beams": 67
+  },
+  "physical_path_length_m": 9.694076192023356,
+  "physical_return_error_m": 0.18066547124963966,
+  "slam_return_error_m": 0.16550283664608711,
+  "after": {
+    "width": 194,
+    "height": 196,
+    "resolution_m": 0.05000000074505806,
+    "occupied_cells": 324,
+    "free_cells": 9897,
+    "unknown_cells": 27803,
+    "map_messages": 255,
+    "scan_messages": 654,
+    "finite_scan_beams": 67
+  },
+  "start": {
+    "t": 7.837000000000001,
+    "odom_x": 0.12745300217854416,
+    "odom_y": 0.0025431694086308133,
+    "odom_yaw": -0.02398320736160286,
+    "truth_x": 0.13590001587019512,
+    "truth_y": -0.00028799230065233337,
+    "truth_yaw": -0.02410719713215079,
+    "slam_x": 0.12745300217854413,
+    "slam_y": 0.002543169408630813,
+    "slam_yaw": -0.02398320736160287
+  },
+  "end": {
+    "t": 70.80000000000001,
+    "odom_x": 0.03903442685154028,
+    "odom_y": 0.12425229244624084,
+    "odom_yaw": -0.1451180111573227,
+    "truth_x": 0.03907790789115108,
+    "truth_y": 0.15224230602839675,
+    "truth_yaw": -0.14990706533265075,
+    "slam_x": 0.032136490770310035,
+    "slam_y": 0.1378426579178834,
+    "slam_yaw": -0.14511801115732237
+  },
+  "geometry": {
+    "occupied_cells": 324,
+    "median_boundary_error_m": 0.03470117765247968,
+    "p90_boundary_error_m": 0.07139900847566283,
+    "cells_within_12cm_by_object": {
+      "box1": 54,
+      "box2": 68,
+      "box3": 90,
+      "cylinder1": 51,
+      "cylinder2": 58
+    },
+    "method": "SDF boundaries and independent initial world/map alignment for evaluation only"
+  },
+  "saved_session": "/home/robot/slam-motion-20261029-02/saved_map/session.json",
+  "save_files": {
+    "graph.data": 342281,
+    "map.pgm": 38039,
+    "graph.posegraph": 10799863,
+    "map.yaml": 125,
+    "session.json": 265
+  },
+  "deserialize_verified": true,
+  "simulation_seconds": 66.197,
+  "wall_seconds": 269.7347890010001,
+  "real_time_factor": 0.24541513627207565
+}

@@ -1,0 +1,94 @@
+/slam_toolbox
+  Subscribers:
+    /clock: rosgraph_msgs/msg/Clock
+    /map: nav_msgs/msg/OccupancyGrid
+    /parameter_events: rcl_interfaces/msg/ParameterEvent
+    /slam/scan: sensor_msgs/msg/LaserScan
+    /slam_toolbox/feedback: visualization_msgs/msg/InteractiveMarkerFeedback
+  Publishers:
+    /map: nav_msgs/msg/OccupancyGrid
+    /map_metadata: nav_msgs/msg/MapMetaData
+    /parameter_events: rcl_interfaces/msg/ParameterEvent
+    /pose: geometry_msgs/msg/PoseWithCovarianceStamped
+    /rosout: rcl_interfaces/msg/Log
+    /slam_toolbox/graph_visualization: visualization_msgs/msg/MarkerArray
+    /slam_toolbox/scan_visualization: sensor_msgs/msg/LaserScan
+    /slam_toolbox/transition_event: lifecycle_msgs/msg/TransitionEvent
+    /slam_toolbox/update: visualization_msgs/msg/InteractiveMarkerUpdate
+    /tf: tf2_msgs/msg/TFMessage
+  Service Servers:
+    /slam_toolbox/change_state: lifecycle_msgs/srv/ChangeState
+    /slam_toolbox/clear_changes: slam_toolbox/srv/Clear
+    /slam_toolbox/describe_parameters: rcl_interfaces/srv/DescribeParameters
+    /slam_toolbox/deserialize_map: slam_toolbox/srv/DeserializePoseGraph
+    /slam_toolbox/dynamic_map: nav_msgs/srv/GetMap
+    /slam_toolbox/get_available_states: lifecycle_msgs/srv/GetAvailableStates
+    /slam_toolbox/get_available_transitions: lifecycle_msgs/srv/GetAvailableTransitions
+    /slam_toolbox/get_interactive_markers: visualization_msgs/srv/GetInteractiveMarkers
+    /slam_toolbox/get_parameter_types: rcl_interfaces/srv/GetParameterTypes
+    /slam_toolbox/get_parameters: rcl_interfaces/srv/GetParameters
+    /slam_toolbox/get_state: lifecycle_msgs/srv/GetState
+    /slam_toolbox/get_transition_graph: lifecycle_msgs/srv/GetAvailableTransitions
+    /slam_toolbox/get_type_description: type_description_interfaces/srv/GetTypeDescription
+    /slam_toolbox/list_parameters: rcl_interfaces/srv/ListParameters
+    /slam_toolbox/manual_loop_closure: slam_toolbox/srv/LoopClosure
+    /slam_toolbox/pause_new_measurements: slam_toolbox/srv/Pause
+    /slam_toolbox/reset: slam_toolbox/srv/Reset
+    /slam_toolbox/save_map: slam_toolbox/srv/SaveMap
+    /slam_toolbox/serialize_map: slam_toolbox/srv/SerializePoseGraph
+    /slam_toolbox/set_parameters: rcl_interfaces/srv/SetParameters
+    /slam_toolbox/set_parameters_atomically: rcl_interfaces/srv/SetParametersAtomically
+    /slam_toolbox/toggle_interactive_mode: slam_toolbox/srv/ToggleInteractive
+  Service Clients:
+
+  Action Servers:
+
+  Action Clients:
+
+/slam_cloud_projection
+  Subscribers:
+    /clock: rosgraph_msgs/msg/Clock
+    /parameter_events: rcl_interfaces/msg/ParameterEvent
+    /unitree_lidar/points: sensor_msgs/msg/PointCloud2
+  Publishers:
+    /parameter_events: rcl_interfaces/msg/ParameterEvent
+    /rosout: rcl_interfaces/msg/Log
+    /slam/scan: sensor_msgs/msg/LaserScan
+  Service Servers:
+    /slam_cloud_projection/describe_parameters: rcl_interfaces/srv/DescribeParameters
+    /slam_cloud_projection/get_parameter_types: rcl_interfaces/srv/GetParameterTypes
+    /slam_cloud_projection/get_parameters: rcl_interfaces/srv/GetParameters
+    /slam_cloud_projection/get_type_description: type_description_interfaces/srv/GetTypeDescription
+    /slam_cloud_projection/list_parameters: rcl_interfaces/srv/ListParameters
+    /slam_cloud_projection/set_parameters: rcl_interfaces/srv/SetParameters
+    /slam_cloud_projection/set_parameters_atomically: rcl_interfaces/srv/SetParametersAtomically
+  Service Clients:
+
+  Action Servers:
+
+  Action Clients:
+
+/slam_planar_odometry
+  Subscribers:
+    /clock: rosgraph_msgs/msg/Clock
+    /odom: nav_msgs/msg/Odometry
+  Publishers:
+    /parameter_events: rcl_interfaces/msg/ParameterEvent
+    /rosout: rcl_interfaces/msg/Log
+    /tf: tf2_msgs/msg/TFMessage
+  Service Servers:
+    /slam_planar_odometry/describe_parameters: rcl_interfaces/srv/DescribeParameters
+    /slam_planar_odometry/get_parameter_types: rcl_interfaces/srv/GetParameterTypes
+    /slam_planar_odometry/get_parameters: rcl_interfaces/srv/GetParameters
+    /slam_planar_odometry/get_type_description: type_description_interfaces/srv/GetTypeDescription
+    /slam_planar_odometry/list_parameters: rcl_interfaces/srv/ListParameters
+    /slam_planar_odometry/set_parameters: rcl_interfaces/srv/SetParameters
+    /slam_planar_odometry/set_parameters_atomically: rcl_interfaces/srv/SetParametersAtomically
+  Service Clients:
+
+  Action Servers:
+
+  Action Clients:
+
+Boolean value is: True
+String value is: base_footprint

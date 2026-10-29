@@ -32,7 +32,7 @@ publisher = node.create_publisher(Twist, '/cmd_vel', 10)
 controller_client = node.create_client(ListControllers, '/controller_manager/list_controllers')
 root = tk.Tk()
 root.title('Go2 行走与传感器 · ROS2 CHAMP')
-root.geometry('430x700+10+25')
+root.geometry('430x735+10+5')
 root.attributes('-topmost', True)
 root.configure(bg='#f5f7fa')
 status = tk.StringVar(value='准备启动行走仿真。')
@@ -256,6 +256,8 @@ tk.Button(root, text='启动仿真', command=start, width=26, pady=4).pack(pady=
 tk.Checkbutton(root, text='启用激光、深度相机与里程计（重启仿真生效）', variable=with_sensors, bg='#f5f7fa').pack()
 tk.Button(root, text='查看实时传感器', width=26,
           command=lambda: subprocess.Popen(['python3', '/home/robot/bin/sensor_viewer.py'])).pack(pady=2)
+tk.Button(root, text='SLAM 建图与地图保存', width=26,
+          command=lambda: subprocess.Popen(['python3', '/home/robot/bin/slam_panel.py'])).pack(pady=2)
 pad = tk.Frame(root, bg='#f5f7fa')
 pad.pack(pady=6)
 for text, row, col, action in [

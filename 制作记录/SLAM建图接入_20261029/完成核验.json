@@ -1,0 +1,132 @@
+{
+  "status": "台式机自测通过，待用户验收",
+  "date": "2026-10-29T14:33:06.553250+08:00",
+  "branch": "codex/slam-mapping-20261029",
+  "baseline_commit": "579fc8abcd4bf06471e6317680e00a9e6f2965a2",
+  "baseline_tag": "codex/pre-slam-baseline-20261029",
+  "baseline_runtime_backup": "C:/RobotDogDesktopRuntime/backups/20261029-pre-slam",
+  "old_project_head": "aea73bc10bf19dc8a1ebd01ccf7404f2f52a54ae",
+  "old_project_tracked_changes": false,
+  "host": {
+    "cpu": "i7-14700K",
+    "gpu": "RTX 4070 SUPER, real accelerated VirGL",
+    "cpus": 8,
+    "memory_mib": 12288
+  },
+  "algorithm": "SLAM Toolbox 2.8.5, Jazzy asynchronous 2D mapping",
+  "source_fingerprint": "43aa4bc7b79f2274b1c0db1ea217fd4a27da9ad99944c8644dbd45a6e779e7c1",
+  "installed_source_matches": true,
+  "host_unit_tests": {
+    "passed": 28,
+    "command": "py -3 -X utf8 -B -m unittest discover -s baseline/desktop_install -p 'test_*.py'"
+  },
+  "physical_mapping": {
+    "result": "PASS",
+    "map": {
+      "width": 194,
+      "height": 196,
+      "resolution_m": 0.05000000074505806,
+      "occupied_cells": 324,
+      "free_cells": 9897,
+      "unknown_cells": 27803,
+      "map_messages": 255,
+      "scan_messages": 654,
+      "finite_scan_beams": 67
+    },
+    "geometry": {
+      "occupied_cells": 324,
+      "median_boundary_error_m": 0.03470117765247968,
+      "p90_boundary_error_m": 0.07139900847566283,
+      "cells_within_12cm_by_object": {
+        "box1": 54,
+        "box2": 68,
+        "box3": 90,
+        "cylinder1": 51,
+        "cylinder2": 58
+      },
+      "method": "SDF boundaries and independent initial world/map alignment for evaluation only"
+    },
+    "simulation_seconds": 66.197,
+    "wall_seconds": 269.7347890010001,
+    "real_time_factor": 0.24541513627207565,
+    "physical_route_return_error_m": 0.18066547124963966,
+    "slam_frame_return_error_m": 0.16550283664608711,
+    "aligned_slam_endpoint_error_m": 0.01728615993934212,
+    "endpoint_definition": "Initial rigid gauge alignment, then stopped endpoint versus independent world truth. Return-to-start deviation is not localization error.",
+    "path_note": "Dense body path integrates gait sway; graph sequential arc is about 4.48m for nominal 1.3x1.0m rectangular test."
+  },
+  "graph_constraints": {
+    "nodes": 35,
+    "edges": 49,
+    "loop_constraint_observed": true,
+    "loop_spanning_constraints": [
+      {
+        "source_id": 0,
+        "target_id": 30,
+        "sequential_path_m": 4.480077479113715,
+        "endpoints_distance_m": 0.18047561984514926
+      }
+    ]
+  },
+  "persistence": {
+    "files": {
+      "graph.data": 342281,
+      "map.pgm": 38039,
+      "graph.posegraph": 10799863,
+      "map.yaml": 125,
+      "session.json": 265
+    },
+    "deserialize_same_mapper": true,
+    "new_mapper_ui_load_and_resave": true,
+    "resaved_map_size": [
+      194,
+      196
+    ],
+    "resaved_occupied_cells": 328
+  },
+  "real_tk_controls": {
+    "result": "PASS",
+    "buttons_visible": true,
+    "start_save_load_stop": true
+  },
+  "walking_with_slam": {
+    "result": "PASS",
+    "measurement_source": "Gazebo ground truth for evaluation only; no pose commands",
+    "controller": "CHAMP",
+    "tests": {
+      "forward_distance_m": 0.7289984938585453,
+      "stop_drift_m": 5.4291222346162016e-05,
+      "left_turn_rad": 1.0511196117298374,
+      "reverse_distance_m": -0.4753414469466267,
+      "right_turn_rad": -0.9520269346742206,
+      "watchdog_drift_m": 5.7769413354706965e-06,
+      "joint_count": 12,
+      "min_body_height_m": 0.22656573094769147,
+      "max_abs_roll_rad": 0.1252686431806466,
+      "max_abs_pitch_rad": 0.09435263293286685
+    },
+    "simulation_seconds": 36.02000000000001,
+    "wall_seconds": 122.29606973900013,
+    "real_time_factor": 0.29453113314984364
+  },
+  "safety_and_limits": {
+    "truth_used_in_mapping_or_control": false,
+    "robot_pose_set": false,
+    "host_security_or_virtualization_changed": false,
+    "laptop_physically_tested": false,
+    "arbitrary_location_relocalization_tested": false,
+    "navigation_added": false,
+    "yolo_added": false,
+    "initial_kernel_panic_before_slam": true,
+    "new_segfault_or_panic_after_recovery": false,
+    "whpx_long_term_stability_solved": false
+  },
+  "delivery": {
+    "shared_update_installs_dependencies": true,
+    "machine_local_configuration_preserved": true,
+    "generated_maps_and_runtime_disks_excluded_from_git": true,
+    "push_authorized": false,
+    "pushed": false,
+    "test_mapper_stopped_walking_simulator_preserved": true
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "baseline": "579fc8abcd4bf06471e6317680e00a9e6f2965a2",
+  "source_tag": "codex/pre-slam-baseline-20261029",
+  "offline_confirmed": true,
+  "exclusive_source_open": true,
+  "backup_path": "C:\\RobotDogDesktopRuntime\\backups\\20261029-pre-slam",
+  "files": [
+    {
+      "name": "robot-dog-clean.qcow2",
+      "bytes": 7752843264,
+      "sha256": "738ab3422c506e95d94c30c204aef445ecf3df42294bbaee57c88864a07377fb"
+    },
+    {
+      "name": "robot-dog-seed.iso",
+      "bytes": 7274496,
+      "sha256": "dc7755d97a24d40c92e76d0b817b5e58466637c0f3e621f06b8fa4b3d12a7457"
+    }
+  ]
+}

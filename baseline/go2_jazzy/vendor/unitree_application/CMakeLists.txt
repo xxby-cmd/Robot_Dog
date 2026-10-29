@@ -24,4 +24,6 @@ install(TARGETS
     DESTINATION lib/${PROJECT_NAME}
 )
 
+install(PROGRAMS scripts/planar_odom.py DESTINATION lib/${PROJECT_NAME})
+
 ament_package()

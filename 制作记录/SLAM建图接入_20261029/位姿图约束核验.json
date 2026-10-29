@@ -1,0 +1,453 @@
+{
+  "nodes": 35,
+  "edges": 49,
+  "loop_spanning_constraints": [
+    {
+      "source_id": 0,
+      "target_id": 30,
+      "sequential_path_m": 4.480077479113715,
+      "endpoints_distance_m": 0.18047561984514926
+    }
+  ],
+  "loop_constraint_observed": true,
+  "criterion": "Real graph edge spanning >20 node IDs and >2.5m sequential path, endpoints <0.5m apart",
+  "source": "Jazzy loop_closure_assistant.cpp publishGraph emits corrected vertices and real graph edges; no manual constraints inserted",
+  "vertices": {
+    "0": [
+      0.12758978957310654,
+      0.0025482009817105215
+    ],
+    "1": [
+      0.3361808906244392,
+      -0.011286295790622793
+    ],
+    "2": [
+      0.4407520841668266,
+      0.0022426743895857517
+    ],
+    "3": [
+      0.6383036320677682,
+      0.00455327388203935
+    ],
+    "4": [
+      0.7475053098143046,
+      -0.042135135702703316
+    ],
+    "5": [
+      0.9434077675272169,
+      -0.021846956760230633
+    ],
+    "6": [
+      1.1485121506515759,
+      -0.059072361851137664
+    ],
+    "7": [
+      1.3494101988382858,
+      -0.07796110704432552
+    ],
+    "8": [
+      1.4659491971928351,
+      -0.0765425054091883
+    ],
+    "9": [
+      1.4092310059709898,
+      -0.16822089289937428
+    ],
+    "10": [
+      1.4388542360533685,
+      -0.08816523139065988
+    ],
+    "11": [
+      1.4651762056321112,
+      0.12580317442568817
+    ],
+    "12": [
+      1.4885707527914895,
+      0.22965177352114186
+    ],
+    "13": [
+      1.4980511111744446,
+      0.33019230078285655
+    ],
+    "14": [
+      1.5003041213184192,
+      0.4669684484087577
+    ],
+    "15": [
+      1.5525845043701973,
+      0.6667885185587035
+    ],
+    "16": [
+      1.6690174261657025,
+      0.7502132626214906
+    ],
+    "17": [
+      1.5697793900176706,
+      0.7557346154554957
+    ],
+    "18": [
+      1.3610631238315047,
+      0.7847539819359719
+    ],
+    "19": [
+      1.2541398229359662,
+      0.78042880052977
+    ],
+    "20": [
+      1.16458495304099,
+      0.8020374913521259
+    ],
+    "21": [
+      0.9479573272608143,
+      0.8115733422339382
+    ],
+    "22": [
+      0.7181538102873212,
+      0.8361235245020417
+    ],
+    "23": [
+      0.6245443947611906,
+      0.8280322561176369
+    ],
+    "24": [
+      0.5000429208246593,
+      0.8435316526174712
+    ],
+    "25": [
+      0.41218564106789196,
+      0.8447425244879719
+    ],
+    "26": [
+      0.29010240554305733,
+      0.7866199790878868
+    ],
+    "27": [
+      0.23171999038795138,
+      0.5856864546250046
+    ],
+    "28": [
+      0.19408487363937477,
+      0.47640847605401465
+    ],
+    "29": [
+      0.18133106573332394,
+      0.4002778877594528
+    ],
+    "30": [
+      0.15765820222854587,
+      0.18050139684757027
+    ],
+    "31": [
+      0.17744473382194012,
+      0.059017321445249196
+    ],
+    "32": [
+      0.12861950217917129,
+      0.09221834641586014
+    ],
+    "33": [
+      0.01962086481536808,
+      0.13550742454847287
+    ],
+    "34": [
+      0.022136490770310022,
+      0.1578426579178834
+    ]
+  },
+  "edges_detail": [
+    {
+      "source_id": 0,
+      "target_id": 1,
+      "sequential_path_m": 0.20904937392575698,
+      "endpoints_distance_m": 0.20904937392575698
+    },
+    {
+      "source_id": 1,
+      "target_id": 2,
+      "sequential_path_m": 0.10544272166923813,
+      "endpoints_distance_m": 0.10544272166923813
+    },
+    {
+      "source_id": 2,
+      "target_id": 3,
+      "sequential_path_m": 0.19756506003864283,
+      "endpoints_distance_m": 0.19756506003864283
+    },
+    {
+      "source_id": 3,
+      "target_id": 4,
+      "sequential_path_m": 0.11876368978863482,
+      "endpoints_distance_m": 0.11876368978863482
+    },
+    {
+      "source_id": 4,
+      "target_id": 5,
+      "sequential_path_m": 0.19695020472891409,
+      "endpoints_distance_m": 0.19695020472891409
+    },
+    {
+      "source_id": 5,
+      "target_id": 6,
+      "sequential_path_m": 0.20845512409390649,
+      "endpoints_distance_m": 0.20845512409390649
+    },
+    {
+      "source_id": 6,
+      "target_id": 7,
+      "sequential_path_m": 0.20178406889594336,
+      "endpoints_distance_m": 0.20178406889594336
+    },
+    {
+      "source_id": 5,
+      "target_id": 7,
+      "sequential_path_m": 0.41023919298984984,
+      "endpoints_distance_m": 0.40986189392599703
+    },
+    {
+      "source_id": 7,
+      "target_id": 8,
+      "sequential_path_m": 0.11654763218564697,
+      "endpoints_distance_m": 0.11654763218564697
+    },
+    {
+      "source_id": 8,
+      "target_id": 9,
+      "sequential_path_m": 0.10780482339987621,
+      "endpoints_distance_m": 0.10780482339987621
+    },
+    {
+      "source_id": 5,
+      "target_id": 9,
+      "sequential_path_m": 0.634591648575373,
+      "endpoints_distance_m": 0.4882792424987061
+    },
+    {
+      "source_id": 9,
+      "target_id": 10,
+      "sequential_path_m": 0.08536067420136395,
+      "endpoints_distance_m": 0.08536067420136395
+    },
+    {
+      "source_id": 10,
+      "target_id": 11,
+      "sequential_path_m": 0.2155813646169206,
+      "endpoints_distance_m": 0.2155813646169206
+    },
+    {
+      "source_id": 8,
+      "target_id": 11,
+      "sequential_path_m": 0.40874686221816076,
+      "endpoints_distance_m": 0.2023471563027049
+    },
+    {
+      "source_id": 11,
+      "target_id": 12,
+      "sequential_path_m": 0.10645109849541547,
+      "endpoints_distance_m": 0.10645109849541547
+    },
+    {
+      "source_id": 8,
+      "target_id": 12,
+      "sequential_path_m": 0.5151979607135763,
+      "endpoints_distance_m": 0.3070287791516747
+    },
+    {
+      "source_id": 12,
+      "target_id": 13,
+      "sequential_path_m": 0.10098650809456114,
+      "endpoints_distance_m": 0.10098650809456114
+    },
+    {
+      "source_id": 10,
+      "target_id": 13,
+      "sequential_path_m": 0.4230189712068972,
+      "endpoints_distance_m": 0.42252490429608425
+    },
+    {
+      "source_id": 13,
+      "target_id": 14,
+      "sequential_path_m": 0.13679470243430902,
+      "endpoints_distance_m": 0.13679470243430902
+    },
+    {
+      "source_id": 7,
+      "target_id": 14,
+      "sequential_path_m": 0.8695268034280934,
+      "endpoints_distance_m": 0.5654354041336069
+    },
+    {
+      "source_id": 14,
+      "target_id": 15,
+      "sequential_path_m": 0.20654611806269785,
+      "endpoints_distance_m": 0.20654611806269785
+    },
+    {
+      "source_id": 12,
+      "target_id": 15,
+      "sequential_path_m": 0.444327328591568,
+      "endpoints_distance_m": 0.44179892966508494
+    },
+    {
+      "source_id": 15,
+      "target_id": 16,
+      "sequential_path_m": 0.1432351674686763,
+      "endpoints_distance_m": 0.1432351674686763
+    },
+    {
+      "source_id": 7,
+      "target_id": 16,
+      "sequential_path_m": 1.2193080889594674,
+      "endpoints_distance_m": 0.8877057881591687
+    },
+    {
+      "source_id": 16,
+      "target_id": 17,
+      "sequential_path_m": 0.09939151450519129,
+      "endpoints_distance_m": 0.09939151450519129
+    },
+    {
+      "source_id": 17,
+      "target_id": 18,
+      "sequential_path_m": 0.2107239981625791,
+      "endpoints_distance_m": 0.2107239981625791
+    },
+    {
+      "source_id": 16,
+      "target_id": 18,
+      "sequential_path_m": 0.3101155126677704,
+      "endpoints_distance_m": 0.3098853233325261
+    },
+    {
+      "source_id": 18,
+      "target_id": 19,
+      "sequential_path_m": 0.10701074464087444,
+      "endpoints_distance_m": 0.10701074464087444
+    },
+    {
+      "source_id": 19,
+      "target_id": 20,
+      "sequential_path_m": 0.09212497077862374,
+      "endpoints_distance_m": 0.09212497077862374
+    },
+    {
+      "source_id": 20,
+      "target_id": 21,
+      "sequential_path_m": 0.21683740614385702,
+      "endpoints_distance_m": 0.21683740614385702
+    },
+    {
+      "source_id": 21,
+      "target_id": 22,
+      "sequential_path_m": 0.2311111591048421,
+      "endpoints_distance_m": 0.2311111591048421
+    },
+    {
+      "source_id": 22,
+      "target_id": 23,
+      "sequential_path_m": 0.09395845517680802,
+      "endpoints_distance_m": 0.09395845517680802
+    },
+    {
+      "source_id": 21,
+      "target_id": 23,
+      "sequential_path_m": 0.3250696142816501,
+      "endpoints_distance_m": 0.3238314696786542
+    },
+    {
+      "source_id": 23,
+      "target_id": 24,
+      "sequential_path_m": 0.12546253745332853,
+      "endpoints_distance_m": 0.12546253745332853
+    },
+    {
+      "source_id": 22,
+      "target_id": 24,
+      "sequential_path_m": 0.21942099263013654,
+      "endpoints_distance_m": 0.2182366615955443
+    },
+    {
+      "source_id": 24,
+      "target_id": 25,
+      "sequential_path_m": 0.08786562363601391,
+      "endpoints_distance_m": 0.08786562363601391
+    },
+    {
+      "source_id": 22,
+      "target_id": 25,
+      "sequential_path_m": 0.30728661626615045,
+      "endpoints_distance_m": 0.30608954202364824
+    },
+    {
+      "source_id": 25,
+      "target_id": 26,
+      "sequential_path_m": 0.1352129678691996,
+      "endpoints_distance_m": 0.1352129678691996
+    },
+    {
+      "source_id": 26,
+      "target_id": 27,
+      "sequential_path_m": 0.20924336943477767,
+      "endpoints_distance_m": 0.20924336943477767
+    },
+    {
+      "source_id": 27,
+      "target_id": 28,
+      "sequential_path_m": 0.11557715437421326,
+      "endpoints_distance_m": 0.11557715437421326
+    },
+    {
+      "source_id": 28,
+      "target_id": 29,
+      "sequential_path_m": 0.07719148975230707,
+      "endpoints_distance_m": 0.07719148975230707
+    },
+    {
+      "source_id": 29,
+      "target_id": 30,
+      "sequential_path_m": 0.2210477559805949,
+      "endpoints_distance_m": 0.2210477559805949
+    },
+    {
+      "source_id": 28,
+      "target_id": 30,
+      "sequential_path_m": 0.29823924573290195,
+      "endpoints_distance_m": 0.29814074178911115
+    },
+    {
+      "source_id": 0,
+      "target_id": 30,
+      "sequential_path_m": 4.480077479113715,
+      "endpoints_distance_m": 0.18047561984514926
+    },
+    {
+      "source_id": 30,
+      "target_id": 31,
+      "sequential_path_m": 0.12308487887979262,
+      "endpoints_distance_m": 0.12308487887979262
+    },
+    {
+      "source_id": 31,
+      "target_id": 32,
+      "sequential_path_m": 0.059044147077158854,
+      "endpoints_distance_m": 0.059044147077158854
+    },
+    {
+      "source_id": 32,
+      "target_id": 33,
+      "sequential_path_m": 0.11728020818849753,
+      "endpoints_distance_m": 0.11728020818849753
+    },
+    {
+      "source_id": 28,
+      "target_id": 33,
+      "sequential_path_m": 0.597648479878351,
+      "endpoints_distance_m": 0.38295067214006445
+    },
+    {
+      "source_id": 33,
+      "target_id": 34,
+      "sequential_path_m": 0.02247645487195896,
+      "endpoints_distance_m": 0.02247645487195896
+    }
+  ]
+}
