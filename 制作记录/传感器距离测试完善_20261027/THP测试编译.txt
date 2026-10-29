@@ -1,0 +1,14 @@
+Starting >>> champ_msgs
+Starting >>> champ
+Starting >>> unitree_go2_description
+Finished <<< unitree_go2_description [0.12s]
+Finished <<< champ [0.13s]
+Finished <<< champ_msgs [0.39s]
+Starting >>> unitree_application
+Starting >>> champ_base
+Finished <<< unitree_application [0.10s]
+Starting >>> unitree_go2_sim
+Finished <<< champ_base [0.14s]
+Finished <<< unitree_go2_sim [0.06s]
+
+Summary: 6 packages finished [0.68s]

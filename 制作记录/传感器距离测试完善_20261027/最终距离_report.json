@@ -1,0 +1,178 @@
+{
+  "result": "PASS",
+  "scope": "sensor streams, timestamps, TF, feedback odometry",
+  "motion_test": false,
+  "truth_usage": "evaluation only; never fused",
+  "thresholds": {
+    "distance_error_m": "max(0.12, 0.35 * actual displacement)",
+    "distance_error_definition": "2D endpoint displacement in each source starting-body frame",
+    "yaw_error_rad": 0.15,
+    "stop_drift_m": 0.08
+  },
+  "range_tests": [
+    {
+      "nominal_body_plane_m": 1.5,
+      "reference": "known static wall plane + time-aligned truth for evaluation only",
+      "depth_z_tolerance_m": 0.03,
+      "lidar_range_tolerance_m": 0.04,
+      "wall_removed": true,
+      "result": "PASS",
+      "depth_optical_z": {
+        "frames": 5,
+        "samples": 405,
+        "measured_m": 1.2201006412506104,
+        "expected_m": 1.2201045632029501,
+        "median_absolute_error_m": 3.918687129678133e-06,
+        "p95_absolute_error_m": 4.282585862158683e-06
+      },
+      "lidar_radial_range": {
+        "frames": 5,
+        "samples": 4309,
+        "measured_m": 1.6057952642440796,
+        "expected_m": 1.606482320204672,
+        "median_absolute_error_m": 0.006564731332110885,
+        "p95_absolute_error_m": 0.019143291254653236
+      },
+      "max_truth_alignment_s": 0.0
+    },
+    {
+      "nominal_body_plane_m": 3.0,
+      "reference": "known static wall plane + time-aligned truth for evaluation only",
+      "depth_z_tolerance_m": 0.03,
+      "lidar_range_tolerance_m": 0.04,
+      "wall_removed": true,
+      "result": "PASS",
+      "depth_optical_z": {
+        "frames": 5,
+        "samples": 405,
+        "measured_m": 2.7200963497161865,
+        "expected_m": 2.7201039382500825,
+        "median_absolute_error_m": 8.931657836441786e-06,
+        "p95_absolute_error_m": 9.452003529464292e-06
+      },
+      "lidar_radial_range": {
+        "frames": 5,
+        "samples": 1705,
+        "measured_m": 3.0129127502441406,
+        "expected_m": 3.0127908909881724,
+        "median_absolute_error_m": 0.006378545784047951,
+        "p95_absolute_error_m": 0.020002634604957235
+      },
+      "max_truth_alignment_s": 0.0
+    }
+  ],
+  "streams": {
+    "/unitree_lidar/points": {
+      "messages": 72,
+      "sim_hz": 9.999999999999988,
+      "frame": "lidar_l1_link",
+      "nonmonotonic": 0
+    },
+    "/d455/image": {
+      "messages": 74,
+      "sim_hz": 10.000000000000004,
+      "frame": "d455_camera_optical_frame",
+      "nonmonotonic": 0
+    },
+    "/d455/depth_image": {
+      "messages": 68,
+      "sim_hz": 9.178082191780826,
+      "frame": "d455_camera_optical_frame",
+      "nonmonotonic": 0
+    },
+    "/d455/camera_info": {
+      "messages": 74,
+      "sim_hz": 10.000000000000004,
+      "frame": "d455_camera_optical_frame",
+      "nonmonotonic": 0
+    },
+    "/imu/data": {
+      "messages": 1463,
+      "sim_hz": 197.3009446693658,
+      "frame": "imu_link",
+      "nonmonotonic": 0
+    },
+    "/joint_states": {
+      "messages": 1821,
+      "sim_hz": 246.01243579345783,
+      "frame": "base_link",
+      "nonmonotonic": 0
+    },
+    "/foot_contacts": {
+      "messages": 718,
+      "sim_hz": 99.17012448132795,
+      "frame": "",
+      "nonmonotonic": 0
+    },
+    "/odom/leg": {
+      "messages": 1825,
+      "sim_hz": 246.1870697799971,
+      "frame": "odom",
+      "nonmonotonic": 0
+    },
+    "/odom": {
+      "messages": 362,
+      "sim_hz": 49.96539792387547,
+      "frame": "odom",
+      "nonmonotonic": 0
+    },
+    "/odom/ground_truth": {
+      "messages": 370,
+      "sim_hz": 49.86486486486483,
+      "frame": "odom",
+      "nonmonotonic": 0
+    },
+    "/clock": {
+      "messages": 5399,
+      "sim_hz": 728.5733567283042,
+      "frame": "",
+      "nonmonotonic": 0
+    }
+  },
+  "tf": {
+    "lidar_l1_link": {
+      "from": "odom",
+      "at_sim_time": 81.60000000000001
+    },
+    "d455_camera_optical_frame": {
+      "from": "odom",
+      "at_sim_time": 81.60000000000001
+    },
+    "imu_link": {
+      "from": "odom",
+      "at_sim_time": 81.60000000000001
+    }
+  },
+  "rgb": {
+    "stddev": 69.30052689084157
+  },
+  "depth": {
+    "finite_pixels": 67196,
+    "min_m": 0.43994244933128357,
+    "max_m": 7.466629981994629
+  },
+  "lidar": {
+    "finite_points": 1360,
+    "width": 360,
+    "height": 16
+  },
+  "camera_intrinsics": [
+    173.6534256826495,
+    0.0,
+    160.0,
+    0.0,
+    173.6534256826495,
+    120.0,
+    0.0,
+    0.0,
+    1.0
+  ],
+  "camera_size": [
+    320,
+    240
+  ],
+  "height_difference_m": 8.50588917211681e-06,
+  "sim_seconds": 7.1839999999999975,
+  "wall_seconds": 35.127958149999984,
+  "average_real_time_factor": 0.20450946705537454
+}

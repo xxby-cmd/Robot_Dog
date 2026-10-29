@@ -1,0 +1,9 @@
+{
+  "result": "PASS",
+  "robot_pose_commands": false,
+  "temporary_wall": "distance_viewer_reference_1793113535028106737",
+  "wall_removed": true,
+  "camera_centre_z_m": 1.7200281620025635,
+  "lidar_head_clearance_m": 1.6515515310124549,
+  "wall_from_body_m": 2.0
+}

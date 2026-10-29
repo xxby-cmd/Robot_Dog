@@ -88,7 +88,7 @@ def discover_config(runtime=None, report=None):
         same_host = data.get('host_id') == platform.node()
         defaults = host_defaults(report)
         if not same_host:
-            for field in ('cpus', 'memory_mib', 'display', 'performance_cores', 'whpx_kernel_irqchip'):
+            for field in ('cpus', 'memory_mib', 'display', 'performance_cores', 'whpx_kernel_irqchip','guest_thp'):
                 data.pop(field, None)
             data.update(defaults)
         for field, value in defaults.items():

@@ -69,6 +69,7 @@ def alive(pid):
     except FileNotFoundError:
         return False
 launchers, panels, processes = [], [], {}
+ui_paths = {str(home/'bin'/name).encode() for name in ('robot-dog-panel.py','sensor_viewer.py')}
 for entry in Path('/proc').iterdir():
     if not entry.name.isdigit(): continue
     try:
@@ -78,7 +79,7 @@ for entry in Path('/proc').iterdir():
     processes[int(entry.name)] = (int(stat[1]), args)
     if len(args)>3 and args[1:4]==[b'/opt/ros/jazzy/bin/ros2',b'launch',b'unitree_go2_sim']:
         launchers.append(int(entry.name))
-    if len(args)>1 and args[1]==str(home/'bin/robot-dog-panel.py').encode():
+    if len(args)>1 and args[1] in ui_paths:
         panels.append(int(entry.name))
 # Gazebo starts its server/GUI in separate process groups. Retain the exact
 # descendants before launch exits, including an orphan from an older update.
@@ -111,8 +112,11 @@ while any(alive(pid) for pid in panels) and time.monotonic()<deadline:
     time.sleep(.1)
 for pid in panels:
     path = Path('/proc',str(pid),'cmdline')
-    if path.exists() and path.read_bytes().split(bytes([0]))[1:2]==[str(home/'bin/robot-dog-panel.py').encode()]:
-        os.kill(pid,signal.SIGKILL)  # An older idle rclpy/Tk panel may retain its file lock.
+    try:
+        current=path.read_bytes().split(bytes([0]))
+        if len(current)>1 and current[1] in ui_paths:
+            os.kill(pid,signal.SIGKILL)  # An older idle rclpy/Tk panel may retain its file lock.
+    except (ProcessLookupError,FileNotFoundError): pass
 source = home/'ros2_ws/src/go2_champ'
 backup = home/'.cache/robotdog-source-before-update.tar.gz'
 with tarfile.open(backup,'w:gz') as archive:

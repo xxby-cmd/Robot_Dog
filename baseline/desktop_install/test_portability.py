@@ -1,5 +1,8 @@
 """Host configuration recovery and command-speed contracts; no VM is launched."""
 import json
+import contextlib
+import io
+import subprocess
 from pathlib import Path
 import platform
 import sys
@@ -8,7 +11,7 @@ import unittest
 from unittest.mock import patch
 
 from common import discover_config, ensure_config, host_defaults, save_config, runtime_candidates
-from vm import command_line
+from vm import command_line, apply_guest_runtime, main as vm_main
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'go2_jazzy'))
 import teleop_settings
 
@@ -74,10 +77,12 @@ class PortabilityTests(unittest.TestCase):
     def test_copied_profile_recomputes_hardware_settings(self):
         root = self.runtime('copied-runtime')
         config = discover_config(root,host('Intel(R) Core(TM) i7-14700K',65536))
+        config['guest_thp']='never'
         config['host_id']='a-different-computer'
         save_config(self.root/'original.json',config)
         recovered = discover_config(root,host())
         self.assertNotIn('whpx_kernel_irqchip',recovered)
+        self.assertNotIn('guest_thp',recovered)
         self.assertEqual(recovered['host_id'],platform.node())
         self.assertEqual(recovered['host_cpu'],host()['host_cpu'])
         self.assertEqual(recovered['hardware_profile'],'default')
@@ -90,6 +95,39 @@ class PortabilityTests(unittest.TestCase):
         root = self.runtime('explicit')
         with patch.dict('os.environ',{'ROBOTDOG_RUNTIME':str(root)}):
             self.assertEqual(runtime_candidates(),[root.resolve()])
+
+    def test_guest_memory_preset_is_explicit_and_confirmed(self):
+        root=self.runtime('guest-memory-setting')
+        config={'runtime':str(root)}
+        with patch('vm.remote') as remote:
+            apply_guest_runtime(config)
+            remote.assert_not_called()
+            with self.assertRaises(ValueError):apply_guest_runtime({**config,'guest_thp':'invalid'})
+            remote.assert_not_called()
+        response=subprocess.CompletedProcess([],0,'always madvise [never]','')
+        with patch('vm.remote',return_value=response) as remote:
+            apply_guest_runtime({**config,'guest_thp':'never'})
+            self.assertIn('/sys/kernel/mm/transparent_hugepage/enabled',remote.call_args.args[1])
+            state=json.loads((root/'jazzy/guest-runtime.json').read_text())
+            self.assertTrue(state['applied'])
+            self.assertEqual(state['guest_thp'],'never')
+
+    def test_failed_distance_run_cannot_download_a_previous_pass(self):
+        config={'runtime':str(self.root),'qmp_port':2266}
+        def response(config,command,**kwargs):
+            # A report from an old fixed output directory must never be reused.
+            if command=='cat /home/robot/sensor-verification/ranges/report.json':
+                return subprocess.CompletedProcess([],0,'{"result":"PASS"}','')
+            return subprocess.CompletedProcess([],1,'','current validation did not run')
+        with patch('vm.load_config',return_value=config), patch('vm.startup.existing',return_value=True), \
+             patch('vm.remote',side_effect=response), patch('sys.argv',['vm.py','verify-distance']), \
+             contextlib.redirect_stdout(io.StringIO()):
+            with self.assertRaises(SystemExit) as result:vm_main()
+        self.assertEqual(result.exception.code,1)
+        folders=list((self.root/'verification/ranges').iterdir())
+        self.assertEqual(len(folders),1)
+        self.assertFalse((folders[0]/'report.json').exists())
+        self.assertIn('current validation did not run',(folders[0]/'test-output.txt').read_text())
 
     def test_ambiguous_instances_and_wrong_owner_are_preserved(self):
         a,b=self.runtime('a'),self.runtime('b')

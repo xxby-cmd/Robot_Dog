@@ -52,9 +52,36 @@ def start(config, progress=None):
     with startup.operation_lock(Path(config['runtime'])/'jazzy'):
         return _start(config, progress)
 
+def apply_guest_runtime(config, progress=None, timeout=50):
+    """Apply an explicit instance-local Linux memory setting, never host policy."""
+    preset = config.get('guest_thp')
+    if preset is None:
+        return
+    if preset not in ('always','madvise','never'):
+        raise ValueError('guest_thp must be always, madvise or never')
+    command = f"sudo -n sh -c 'echo {preset} > /sys/kernel/mm/transparent_hugepage/enabled'; cat /sys/kernel/mm/transparent_hugepage/enabled"
+    deadline = time.monotonic()+timeout
+    while time.monotonic()<deadline:
+        try:
+            result = remote(config,command,timeout=6)
+            if result.returncode == 0 and '['+preset+']' in result.stdout:
+                write_json(Path(config['runtime'])/'jazzy/guest-runtime.json',
+                           {'guest_thp':preset,'applied':True,'scope':'this Linux guest only'})
+                return
+            if result.returncode not in (0,255):
+                raise RuntimeError('来宾内存兼容配置未生效：'+result.stderr[-400:])
+            if any(error in result.stderr for error in ('Permission denied','IDENTIFICATION HAS CHANGED')):
+                raise RuntimeError('来宾连接身份检查失败：'+result.stderr[-400:])
+        except (OSError,subprocess.TimeoutExpired):
+            pass
+        if progress:progress('正在等待 Ubuntu 并应用本实例的来宾内存兼容配置……')
+        time.sleep(1)
+    raise TimeoutError('尚未确认来宾内存兼容配置生效；实例保留，请检查启动日志。')
+
 def _start(config, progress):
     name = config.get('vm_name', 'Go2 Desktop ROS2 Jazzy CHAMP')
     if startup.existing(config['qmp_port'], name):
+        apply_guest_runtime(config, progress)
         print('该桌面虚拟机已经运行。')
         return
     for field in ('qemu', 'disk', 'seed', 'key'):
@@ -81,6 +108,7 @@ def _start(config, progress):
             except (OSError, AttributeError) as error:
                 print('进程调度未调整，保留系统默认：', error, flush=True)
     startup.spawn(args, root/'jazzy', config['qmp_port'], name, progress, configure)
+    apply_guest_runtime(config, progress)
     print('虚拟机已启动；首次安装时请等待 Ubuntu 自动安装。', flush=True)
 
 def wait_for_graphics(config, progress=None, cancel_event=None, timeout=180):
@@ -162,7 +190,7 @@ sudo -n systemctl --no-block poweroff'''
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['start','shutdown','status','exec','gpu','verify','upload','download'])
+    parser.add_argument('action', choices=['start','shutdown','status','exec','gpu','verify','verify-distance','upload','download'])
     parser.add_argument('command', nargs='*')
     parser.add_argument('--config', type=Path, default=DEFAULT_CONFIG)
     parser.add_argument('--headless', action='store_true')
@@ -205,7 +233,26 @@ def main():
         elif args.action == 'verify':
             command = 'source /opt/ros/jazzy/setup.bash; source ~/ros2_ws/install/setup.bash; python3 ~/bin/verify_walking.py'
             timeout = 1200
+        elif args.action == 'verify-distance':
+            if not startup.existing(config['qmp_port'],config.get('vm_name','Go2 Desktop ROS2 Jazzy CHAMP')):
+                raise RuntimeError('请先启动虚拟机和传感器模式，再运行距离测试。')
+            print('开始距离自测。请保持机器狗停止，不操作方向按钮；测试后自动移除临时障碍物。',flush=True)
+            run_id=time.strftime('%Y%m%d-%H%M%S')+'-'+str(time.time_ns()%1_000_000_000).zfill(9)
+            remote_output='/home/robot/sensor-verification/ranges/'+run_id
+            command = ('source /opt/ros/jazzy/setup.bash; source ~/ros2_ws/install/setup.bash; '
+                       'python3 ~/bin/verify_sensors.py --ranges --output '+shlex.quote(remote_output))
+            timeout = 600
         result = remote(config, command, timeout=timeout)
+        if args.action == 'verify-distance':
+            folder=Path(config['runtime'])/'verification/ranges'/run_id
+            folder.mkdir(parents=True,exist_ok=True)
+            (folder/'test-output.txt').write_text(result.stdout+result.stderr,encoding='utf-8')
+            for name in ('report.json','trace.csv'):
+                downloaded=remote(config,'cat '+shlex.quote(remote_output+'/'+name),timeout=20)
+                if downloaded.returncode==0:(folder/name).write_text(downloaded.stdout,encoding='utf-8')
+            print('距离自测'+('通过。' if result.returncode==0 else '未通过，请查看报告。'))
+            print('本机报告：',folder)
+            raise SystemExit(result.returncode)
         print(result.stdout, end='')
         print(result.stderr, end='', file=sys.stderr)
         if args.action == 'verify' and result.returncode == 0:

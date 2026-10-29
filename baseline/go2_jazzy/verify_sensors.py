@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Validate live sensor/TF chains, optionally move the physical robot to evaluate odometry."""
 import argparse
-from collections import defaultdict
+from collections import defaultdict, deque
 import csv
+import fcntl
 import json
 import math
 import os
 from pathlib import Path
 import signal
+import subprocess
 import time
 import numpy as np
 os.environ['ROS_DOMAIN_ID'] = '42'
@@ -21,7 +23,8 @@ from rosgraph_msgs.msg import Clock
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from champ_msgs.msg import ContactsStamped
-from tf2_ros import Buffer, TransformListener
+from tf2_ros import Buffer, TransformListener, TransformException
+from sensor_measurements import depth_array, motion_metrics, plane_intersections, rotation
 
 
 def seconds(stamp):
@@ -43,6 +46,7 @@ class Verification(Node):
         self.stamps = defaultdict(list)
         self.nonmonotonic = defaultdict(int)
         self.trace = []
+        self.truth_history = deque(maxlen=2000)
         self.interrupted = False
         self.topics = [
             ('cloud', PointCloud2, '/unitree_lidar/points'),
@@ -65,6 +69,8 @@ class Verification(Node):
         self.stamps[name].append(stamp)
         self.latest[name] = msg
         self.received[name] = time.monotonic()
+        if name == 'truth':
+            self.truth_history.append((stamp, msg))
 
     def pump(self):
         if self.interrupted:
@@ -139,7 +145,7 @@ class Verification(Node):
         assert abs(seconds(rgb.header.stamp)-seconds(info.header.stamp))<0.15
         colors = np.frombuffer(bytes(rgb.data), np.uint8)
         assert np.std(colors)>5, 'Blank/constant RGB image'
-        depths = np.frombuffer(bytes(depth.data), '>f4' if depth.is_bigendian else '<f4')
+        depths = depth_array(depth)
         valid = depths[np.isfinite(depths) & (depths>0)]
         assert len(valid)>depth.width*depth.height*0.02, 'Empty depth image'
         points = point_cloud2.read_points_numpy(self.latest['cloud'], field_names=('x','y','z'), skip_nans=True)
@@ -161,21 +167,146 @@ class Verification(Node):
                          'height':self.latest['cloud'].height},
                 'camera_intrinsics':list(info.k), 'camera_size':[rgb.width,rgb.height]}
 
+    def sensor_pose(self, message):
+        """Time-aligned ground truth is used only by this independent evaluator."""
+        stamp = seconds(message.header.stamp)
+        truth_time, truth = min(self.truth_history, key=lambda item: abs(item[0]-stamp))
+        if abs(truth_time-stamp) > .05:
+            raise ValueError('No time-aligned truth for range evaluation')
+        fixed = self.buffer.lookup_transform('base_link', message.header.frame_id,
+                                             rclpy.time.Time.from_msg(message.header.stamp)).transform
+        p, q = truth.pose.pose.position, truth.pose.pose.orientation
+        base_rotation = rotation((q.x,q.y,q.z,q.w))
+        t, q = fixed.translation, fixed.rotation
+        origin = base_rotation @ [t.x,t.y,t.z] + [p.x,p.y,p.z]
+        return origin, base_rotation @ rotation((q.x,q.y,q.z,q.w)), abs(truth_time-stamp)
+
+    def check_ranges(self, report):
+        """Measure two temporary real scene walls; never move/set robot poses."""
+        def service(action, kind, request):
+            result = subprocess.run(['gz','service','-s','/world/default/'+action,
+                '--reqtype',kind,'--reptype','gz.msgs.Boolean','--timeout','5000','--req',request],
+                capture_output=True,text=True,timeout=10)
+            if result.returncode or 'true' not in result.stdout:
+                raise RuntimeError(action+': '+result.stdout+result.stderr)
+        report['range_tests'] = []
+        for distance in (1.5, 3.0):
+            start = self.sample()
+            heading = start['truth_yaw']
+            normal = np.array([math.cos(heading),math.sin(heading),0.])
+            tangent = np.array([-normal[1],normal[0],0.])
+            centre = np.array([start['truth_x'],start['truth_y'],0.]) + (distance+.02)*normal
+            offset = float(normal @ centre-.02)
+            name = 'range_reference_'+str(time.time_ns())
+            item = {'nominal_body_plane_m':distance, 'reference':'known static wall plane + time-aligned truth for evaluation only',
+                    'depth_z_tolerance_m':.03,'lidar_range_tolerance_m':.04,'wall_removed':False,'result':'FAIL'}
+            report['range_tests'].append(item)
+            sdf = f'''<sdf version="1.8"><model name="{name}"><static>true</static>
+<pose>{centre[0]} {centre[1]} 1 0 0 {heading}</pose><link name="wall">
+<collision name="collision"><geometry><box><size>0.04 4 2</size></box></geometry></collision>
+<visual name="visual"><geometry><box><size>0.04 4 2</size></box></geometry>
+<material><ambient>0.1 0.5 0.8 1</ambient><diffuse>0.1 0.5 0.8 1</diffuse></material></visual>
+</link></model></sdf>'''
+            created = False
+            try:
+                service('create','gz.msgs.EntityFactory','sdf: '+json.dumps(sdf))
+                created = True
+                minimum_stamp = start['t']+.5
+                errors = {'depth':[], 'cloud':[]}
+                measured = {'depth':[], 'cloud':[]}
+                expected = {'depth':[], 'cloud':[]}
+                frames = {'depth':0,'cloud':0}
+                last = {}
+                alignment = []
+                deadline=time.monotonic()+100
+                while min(frames.values())<5:
+                    self.command()
+                    self.pump()
+                    for key in frames:
+                        if frames[key]>=5: continue
+                        message=self.latest[key]
+                        stamp=seconds(message.header.stamp)
+                        if stamp<minimum_stamp or stamp==last.get(key): continue
+                        try:
+                            origin, matrix, skew = self.sensor_pose(message)
+                        except (ValueError, TransformException) as error:
+                            # TF/truth can arrive one callback after the image; retry it.
+                            if time.monotonic()>deadline: raise RuntimeError('Range pose unavailable: '+str(error)) from error
+                            continue
+                        if key=='depth':
+                            values=depth_array(message)
+                            info=self.latest['camera_info']
+                            if (info.width,info.height)!=(message.width,message.height):
+                                raise ValueError('Depth and camera intrinsics size mismatch')
+                            u,v=np.meshgrid(np.arange(message.width//2-4,message.width//2+5),
+                                            np.arange(message.height//2-4,message.height//2+5))
+                            rays=np.column_stack(((u.ravel()-info.k[2])/info.k[0],
+                                                   (v.ravel()-info.k[5])/info.k[4],np.ones(u.size))) @ matrix.T
+                            actual=values[v.ravel(),u.ravel()]
+                        else:
+                            points=point_cloud2.read_points_numpy(message,field_names=('x','y','z'),skip_nans=True).reshape(-1,3)
+                            points=points[np.isfinite(points).all(axis=1)]
+                            actual=np.linalg.norm(points,axis=1)
+                            good=actual>.8
+                            actual,points=actual[good],points[good]
+                            rays=(points/actual[:,None]) @ matrix.T
+                        reference=plane_intersections(origin,rays,normal,offset)
+                        intersections=origin+reference[:,None]*rays
+                        lateral=(intersections-centre) @ tangent
+                        valid=(np.isfinite(reference) & np.isfinite(actual) & (actual>0)
+                               & (np.abs(lateral)<1.8) & (intersections[:,2]>.15) & (intersections[:,2]<1.85))
+                        if np.count_nonzero(valid)<10:
+                            last[key]=stamp
+                            continue
+                        errors[key].extend(np.abs(actual[valid]-reference[valid]).tolist())
+                        measured[key].append(float(np.median(actual[valid])))
+                        expected[key].append(float(np.median(reference[valid])))
+                        frames[key]+=1
+                        last[key]=stamp
+                        alignment.append(skew)
+                    if time.monotonic()>deadline:
+                        raise TimeoutError('Not enough reference-wall returns: '+str(frames))
+                    time.sleep(.025)
+                for key,label,tolerance in [('depth','depth_optical_z',.03),('cloud','lidar_radial_range',.04)]:
+                    item[label]={'frames':frames[key], 'samples':len(errors[key]),
+                        'measured_m':float(np.median(measured[key])), 'expected_m':float(np.median(expected[key])),
+                        'median_absolute_error_m':float(np.median(errors[key])),
+                        'p95_absolute_error_m':float(np.percentile(errors[key],95))}
+                    assert item[label]['median_absolute_error_m']<tolerance, label+' distance error'
+                    assert item[label]['p95_absolute_error_m']<tolerance*2, label+' unstable distance returns'
+                item['max_truth_alignment_s']=max(alignment)
+                item['result']='PASS'
+            finally:
+                if created:
+                    service('remove','gz.msgs.Entity',f'name: "{name}" type: MODEL')
+                    item['wall_removed']=True
+            print('range',json.dumps(item),flush=True)
+
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--motion', action='store_true', help='Actually drive forward/back/left/right for odometry evaluation')
+    parser.add_argument('--ranges', action='store_true', help='Check RGB-D optical Z and lidar range against two temporary walls')
     parser.add_argument('--output', default='/home/robot/sensor-verification')
     args = parser.parse_args()
     output = Path(args.output)
     output.mkdir(parents=True, exist_ok=True)
+    lock_path=Path.home()/'.cache/robot-dog-sensor-verification.lock'
+    lock_path.parent.mkdir(exist_ok=True)
+    lock=lock_path.open('a')
+    try:
+        fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    except BlockingIOError:
+        parser.error('已有传感器验证正在运行，请等待它完成。')
     rclpy.init()
     node = Verification()
     signal.signal(signal.SIGTERM, lambda *_: setattr(node, 'interrupted', True))
     signal.signal(signal.SIGINT, lambda *_: setattr(node, 'interrupted', True))
+    signal.signal(signal.SIGHUP, lambda *_: setattr(node, 'interrupted', True))
     report = {'result':'FAIL', 'scope':'sensor streams, timestamps, TF, feedback odometry',
               'motion_test':args.motion, 'truth_usage':'evaluation only; never fused',
               'thresholds': {'distance_error_m':'max(0.12, 0.35 * actual displacement)',
+                             'distance_error_definition':'2D endpoint displacement in each source starting-body frame',
                              'yaw_error_rad':0.15, 'stop_drift_m':0.08}}
     started = time.monotonic()
     try:
@@ -187,32 +318,34 @@ def main():
             time.sleep(0.03)
         first_t = node.sample()['t']
         node.phase('stationary', 5)
+        if args.ranges:
+            node.check_ranges(report)
         if args.motion:
             report['motion'] = {}
+            motion_origin=node.sample()
             for name, duration, forward, turn in [('forward',3,0.15,0), ('reverse',3,-0.12,0),
                                                   ('left',2,0,0.25), ('right',2,0,-0.25)]:
                 a,b = node.phase(name,duration,forward,turn)
-                values = {}
-                for source in ('odom','truth'):
-                    dx,dy=b[source+'_x']-a[source+'_x'], b[source+'_y']-a[source+'_y']
-                    heading=a[source+'_yaw']
-                    values[source+'_forward_m']=math.cos(heading)*dx+math.sin(heading)*dy
-                    values[source+'_yaw_rad']=delta(b[source+'_yaw'],heading)
-                values['distance_error_m']=abs(values['odom_forward_m']-values['truth_forward_m'])
-                values['yaw_error_rad']=abs(delta(values['odom_yaw_rad'],values['truth_yaw_rad']))
+                values = motion_metrics(a,b)
                 report['motion'][name]=values
+                assert values['yaw_error_rad']<0.15, 'Excessive yaw error'
                 if forward:
                     assert values['truth_forward_m']*forward > 0.01, 'Actual motion direction failed'
                     assert values['odom_forward_m']*forward > 0.01, 'Odometry direction failed'
-                    assert values['distance_error_m'] < max(0.12, abs(values['truth_forward_m'])*0.35), 'Excessive distance error'
+                    travel=math.hypot(values['truth_forward_m'],values['truth_lateral_m'])
+                    assert values['position_error_m'] < max(0.12, travel*0.35), 'Excessive 2D distance error'
                 else:
                     assert values['truth_yaw_rad']*turn > 0.02 and values['odom_yaw_rad']*turn > 0.02
-                    assert values['yaw_error_rad']<0.15, 'Excessive yaw error'
                 node.phase(name+'_settle',2)
             a,b=node.phase('stop_hold',3)
             drift=math.hypot(b['odom_x']-a['odom_x'],b['odom_y']-a['odom_y'])
             report['stop_odom_drift_m']=drift
+            report['stop_truth_drift_m']=math.hypot(b['truth_x']-a['truth_x'],b['truth_y']-a['truth_y'])
+            assert report['stop_truth_drift_m']<0.08,'Actual robot drifts at rest'
             assert drift<0.08, 'Odometry drifts at rest'
+            report['motion_summary']=motion_metrics(motion_origin,b)
+            report['motion_summary']['cumulative_drift_warning']=report['motion_summary']['position_error_m']>.12
+            report['motion_summary']['scope']='Cumulative endpoint diagnostic; phase thresholds do not certify precise positioning'
         report.update(node.check_streams())
         report['height_difference_m']=abs(node.latest['odom'].pose.pose.position.z-node.latest['truth'].pose.pose.position.z)
         assert report['height_difference_m']<0.06, 'Incorrect body height / TF'

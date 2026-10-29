@@ -1,0 +1,15 @@
+{
+  "reference": "forward phase start, own initial-body axes to remove initial pose offset",
+  "total_displacement_m": {
+    "odom": [
+      0.16342479218241493,
+      0.042037768444504485
+    ],
+    "truth": [
+      -0.028128368075543343,
+      0.029511563502132198
+    ]
+  },
+  "cumulative_endpoint_error_m": 0.19196228539759927,
+  "scope": "diagnostic only; phase checks passing do not prove precise or long-term positioning"
+}

@@ -32,7 +32,7 @@ publisher = node.create_publisher(Twist, '/cmd_vel', 10)
 controller_client = node.create_client(ListControllers, '/controller_manager/list_controllers')
 root = tk.Tk()
 root.title('Go2 行走与传感器 · ROS2 CHAMP')
-root.geometry('430x720+10+25')
+root.geometry('430x700+10+25')
 root.attributes('-topmost', True)
 root.configure(bg='#f5f7fa')
 status = tk.StringVar(value='准备启动行走仿真。')
@@ -257,17 +257,17 @@ def focus_robot():
             root.after(0, lambda: status.set('视角暂未就绪，请等待仿真加载后重试。'))
     threading.Thread(target=work, daemon=True).start()
 
-tk.Label(root, text='Go2 行走控制', font=('Noto Sans CJK SC', 19, 'bold'), bg='#f5f7fa').pack(pady=(15, 3))
-tk.Label(root, text='ROS2 Jazzy · Gazebo Harmonic · CHAMP', bg='#f5f7fa').pack(pady=(0, 12))
+tk.Label(root, text='Go2 行走控制', font=('Noto Sans CJK SC', 19, 'bold'), bg='#f5f7fa').pack(pady=(10, 3))
+tk.Label(root, text='ROS2 Jazzy · Gazebo Harmonic · CHAMP', bg='#f5f7fa').pack(pady=(0, 7))
 tk.Label(root, textvariable=gpu_status, wraplength=400, bg='#f5f7fa', fg='#526071').pack(pady=(0, 4))
 tk.Label(root, textvariable=speed_status, bg='#f5f7fa', fg='#526071').pack(pady=3)
-tk.Button(root, text='速度调参', command=tune_speeds, width=26, pady=5).pack(pady=3)
-tk.Button(root, text='启动仿真', command=start, width=26, pady=6).pack(pady=4)
+tk.Button(root, text='速度调参', command=tune_speeds, width=26, pady=4).pack(pady=2)
+tk.Button(root, text='启动仿真', command=start, width=26, pady=4).pack(pady=2)
 tk.Checkbutton(root, text='启用激光、深度相机与里程计（重启仿真生效）', variable=with_sensors, bg='#f5f7fa').pack()
 tk.Button(root, text='查看实时传感器', width=26,
-          command=lambda: subprocess.Popen(['python3', '/home/robot/bin/sensor_viewer.py'])).pack(pady=4)
+          command=lambda: subprocess.Popen(['python3', '/home/robot/bin/sensor_viewer.py'])).pack(pady=2)
 pad = tk.Frame(root, bg='#f5f7fa')
-pad.pack(pady=10)
+pad.pack(pady=6)
 for text, row, col, action in [
     ('前进 ↑', 0, 1, 'forward'), ('左转 ←', 1, 0, 'left'),
     ('右转 →', 1, 2, 'right'), ('后退 ↓', 2, 1, 'reverse'),
@@ -277,13 +277,13 @@ for text, row, col, action in [
     button.bind('<ButtonPress-1>', lambda event, action=action: move_action(action))
     button.bind('<ButtonRelease-1>', halt)
 tk.Button(pad, text='停止', command=halt, width=10, height=2, bg='#ffd9d9').grid(row=1, column=1)
-tk.Label(root, text='按住按钮或方向键移动；松开即停止\n空格停止，连续按住最多 10 秒', bg='#f5f7fa').pack(pady=4)
-tk.Label(root, textvariable=sensor_status, bg='#f5f7fa', fg='#526071').pack(pady=5)
+tk.Label(root, text='按住按钮或方向键移动；松开即停止\n空格停止，连续按住最多 10 秒', bg='#f5f7fa').pack(pady=2)
+tk.Label(root, textvariable=sensor_status, bg='#f5f7fa', fg='#526071').pack(pady=3)
 
-tk.Button(root, text='居中并跟随机器狗', command=focus_robot, width=26).pack(pady=4)
-tk.Button(root, text='停止仿真', command=stop, width=26).pack(pady=4)
-tk.Button(root, text='查看日志', command=logs, width=26).pack(pady=4)
-tk.Label(root, textvariable=status, wraplength=360, bg='#f5f7fa', fg='#334155').pack(pady=10)
+tk.Button(root, text='居中并跟随机器狗', command=focus_robot, width=26).pack(pady=2)
+tk.Button(root, text='停止仿真', command=stop, width=26).pack(pady=2)
+tk.Button(root, text='查看日志', command=logs, width=26).pack(pady=2)
+tk.Label(root, textvariable=status, wraplength=360, bg='#f5f7fa', fg='#334155').pack(pady=5)
 def key_pressed(action):
     global key_release_job
     if key_release_job is not None:

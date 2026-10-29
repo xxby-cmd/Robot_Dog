@@ -9,7 +9,7 @@ import tarfile
 
 SOURCE = Path(__file__).resolve().parent
 TOOLS = ['start-simulation.sh', 'start-sensors.sh', 'start-panel.sh', 'robot-dog-panel.py', 'teleop_settings.py',
-         'sensor_viewer.py', 'verify_sensors.py', 'start_physics.py', 'focus_robot.py', 'walking.gui.config']
+         'sensor_viewer.py', 'sensor_measurements.py', 'verify_sensors.py', 'start_physics.py', 'focus_robot.py', 'walking.gui.config']
 
 
 def connection(legacy=False, config=None):
