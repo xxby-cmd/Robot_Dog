@@ -1,6 +1,6 @@
 {
   "date": "2026-10-30",
-  "status": "台式机自测通过，待用户验收；尚未推送",
+  "status": "台式机自测通过，待用户验收；用户已授权YOLO与总览一同发布，远端结果另行核验",
   "source_branch": "codex/yolov10-detection-20261030",
   "baseline_commit": "81e58044428772fbf7643ee6480d15f81572ed49",
   "baseline_tag": "codex/pre-yolo-baseline-20261030",

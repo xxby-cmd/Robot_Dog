@@ -1,6 +1,6 @@
 {
   "date": "2026-10-30",
-  "status": "台式机自测通过，待用户验收；尚未推送GitHub",
+  "status": "台式机自测通过，待用户验收；用户已授权YOLO与总览一同发布，远端结果另行核验",
   "request": "单一演示总览：机器狗三维主画面、SLAM地图、YOLO检测与紧凑控制区",
   "branch": "codex/demo-workspace-20261030",
   "baseline": "a9ef326c5a83f19fa6cc262324396fc04ee4d141",
