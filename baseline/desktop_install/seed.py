@@ -5,8 +5,8 @@ import sys
 import tarfile
 from common import REPO, SOURCE
 
-TOOLS = ['start-simulation.sh', 'start-sensors.sh', 'start-slam.sh', 'slam_panel.py', 'slam_session.py', 'verify_slam.py', 'start-panel.sh', 'robot-dog-panel.py', 'teleop_settings.py', 'sensor_viewer.py', 'sensor_measurements.py', 'verify_sensors.py', 'start_physics.py',
-         'verify_walking.py', 'measure_performance.py', 'focus_robot.py', 'capture_guest.py', 'walking.gui.config']
+TOOLS = ['start-simulation.sh', 'start-sensors.sh', 'start-slam.sh', 'slam_panel.py', 'slam_session.py', 'verify_slam.py', 'start-vision.sh', 'install-vision.sh', 'vision_panel.py', 'yolo_node.py', 'yolo_runtime.py', 'vision_assets.py', 'vision_model.json', 'vision-requirements.txt', 'start-panel.sh', 'robot-dog-panel.py', 'teleop_settings.py', 'sensor_viewer.py', 'sensor_measurements.py', 'verify_sensors.py', 'start_physics.py',
+         'verify_walking.py', 'verify_vision.py', 'vision_scene.py', 'measure_performance.py', 'focus_robot.py', 'capture_guest.py', 'walking.gui.config']
 
 def package_source(destination):
     vendor = SOURCE/'vendor'

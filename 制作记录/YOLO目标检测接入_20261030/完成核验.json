@@ -1,0 +1,538 @@
+{
+  "date": "2026-10-30",
+  "status": "台式机自测通过，待用户验收；尚未推送",
+  "source_branch": "codex/yolov10-detection-20261030",
+  "baseline_commit": "81e58044428772fbf7643ee6480d15f81572ed49",
+  "baseline_tag": "codex/pre-yolo-baseline-20261030",
+  "scope": "用户确认预训练常见物体先跑通，不训练；二维RGB识别，不接语义地图/导航/Frontier",
+  "preservation": {
+    "source_archive": "原可运行源码_81e5804.zip",
+    "offline_runtime_backup": "运行根目录/backups/20261030-pre-yolo/，复制前离线独占且SHA256一致",
+    "old_project": "D:/Robot_Dog保持不动"
+  },
+  "model": {
+    "name": "YOLOv10n",
+    "source_revision": "57657320425ee34056408a57ad9d29c4d4815bd8",
+    "sha256": "a77dd863933f184a19e84361c64b788228a7c7dacc2c78939239a96ad3efca3b",
+    "runtime": "ONNX Runtime 1.23.2 CPUExecutionProvider，2线程，关闭空闲自旋",
+    "license": "AGPL-3.0"
+  },
+  "implementation": [
+    "真实/d455/image输入，消息原时间戳与坐标系保持",
+    "最新帧槽避免旧帧积压，断帧后约2秒过期，恢复后继续",
+    "同一精确原始框的多个类别保留为Detection2D.results备选，主标签最高得分；不同原始框不按裁剪后几何合并，不追加IoU NMS",
+    "独立窗口开始/停止/关闭、置信度/最大处理频率、可移除真实三维Fuel椅子",
+    "首次部署与共享更新同步依赖及工具，本机盘符/端口/显卡配置仍独立"
+  ],
+  "host_checks": {
+    "unit_tests_passed": 36,
+    "diff_check": "PASS",
+    "installed_files_checked": 120,
+    "installed_normalized_hashes": "全部一致；TOOLS按共享安装器CRLF转LF"
+  },
+  "latest_normal_entry_vision": {
+    "pipeline_pass": true,
+    "recognition_pass": true,
+    "recognition_scope": "known scene class presence",
+    "expected_labels": [
+      "chair"
+    ],
+    "observed_labels": [
+      "chair"
+    ],
+    "errors": [],
+    "class_hit_frames": {
+      "chair": 18
+    },
+    "class_frame_ratio": {
+      "chair": 1.0
+    },
+    "accuracy_acceptance": "Not evaluated: class presence is not precision, recall or continuous recognition acceptance",
+    "category_semantics": "Highest scored hypothesis per exact model geometry; alternative hypotheses retained in frame records",
+    "wall_seconds": 20.03652311099995,
+    "matched_frames": 18,
+    "output_fps": 0.8983594558937269,
+    "camera_to_detection_p95_ms": 211.42868605006697,
+    "inference_median_ms": 131.43630499985193,
+    "real_time_factor": 0.09210537845722304,
+    "joint_count": 12,
+    "provider": [
+      "CPUExecutionProvider"
+    ],
+    "measurement_only": true,
+    "frames": [
+      {
+        "stamp": [
+          4,
+          800000000,
+          "d455_camera_optical_frame"
+        ],
+        "latency_ms": 129.54835899995487,
+        "objects": [
+          {
+            "label": "chair",
+            "score": 0.4609544575214386,
+            "xyxy": [
+              194.28317260742188,
+              83.80584716796875,
+              254.06727600097656,
+              151.7245635986328
+            ],
+            "alternatives": []
+          },
+          {
+            "label": "chair",
+            "score": 0.3187050521373749,
+            "xyxy": [
+              194.40480041503906,
+              83.9578628540039,
+              254.07138061523438,
+              151.52609252929688
+            ],
+            "alternatives": []
+          }
+        ]
+      },
+      {
+        "stamp": [
+          4,
+          900000000,
+          "d455_camera_optical_frame"
+        ],
+        "latency_ms": 133.07878599994183,
+        "objects": [
+          {
+            "label": "chair",
+            "score": 0.6865381598472595,
+            "xyxy": [
+              194.28793334960938,
+              83.8141098022461,
+              254.07513427734375,
+              151.73785400390625
+            ],
+            "alternatives": []
+          }
+        ]
+      },
+      {
+        "stamp": [
+          5,
+          0,
+          "d455_camera_optical_frame"
+        ],
+        "latency_ms": 181.84048800003438,
+        "objects": [
+          {
+            "label": "chair",
+            "score": 0.6865381598472595,
+            "xyxy": [
+              194.28793334960938,
+              83.8141098022461,
+              254.07513427734375,
+              151.73785400390625
+            ],
+            "alternatives": []
+          }
+        ]
+      },
+      {
+        "stamp": [
+          5,
+          100000000,
+          "d455_camera_optical_frame"
+        ],
+        "latency_ms": 199.6830210000553,
+        "objects": [
+          {
+            "label": "chair",
+            "score": 0.7216851711273193,
+            "xyxy": [
+              193.93174743652344,
+              83.99156188964844,
+              254.24139404296875,
+              151.63888549804688
+            ],
+            "alternatives": []
+          }
+        ]
+      },
+      {
+        "stamp": [
+          5,
+          200000000,
+          "d455_camera_optical_frame"
+        ],
+        "latency_ms": 215.13430099980724,
+        "objects": [
+          {
+            "label": "chair",
+            "score": 0.8223223686218262,
+            "xyxy": [
+              194.28089904785156,
+              83.99616241455078,
+              254.238525390625,
+              151.80856323242188
+            ],
+            "alternatives": []
+          }
+        ]
+      },
+      {
+        "stamp": [
+          5,
+          300000000,
+          "d455_camera_optical_frame"
+        ],
+        "latency_ms": 148.64815900000394,
+        "objects": [
+          {
+            "label": "chair",
+            "score": 0.646865963935852,
+            "xyxy": [
+              193.76856994628906,
+              84.04745483398438,
+              254.36773681640625,
+              151.26666259765625
+            ],
+            "alternatives": [
+              {
+                "label": "bench",
+                "score": 0.2923780083656311
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "stamp": [
+          5,
+          400000000,
+          "d455_camera_optical_frame"
+        ],
+        "latency_ms": 153.26036100009333,
+        "objects": [
+          {
+            "label": "chair",
+            "score": 0.7544336915016174,
+            "xyxy": [
+              194.31521606445312,
+              83.84461975097656,
+              254.0520477294922,
+              151.57797241210938
+            ],
+            "alternatives": []
+          }
+        ]
+      },
+      {
+        "stamp": [
+          5,
+          500000000,
+          "d455_camera_optical_frame"
+        ],
+        "latency_ms": 134.3939450000562,
+        "objects": [
+          {
+            "label": "chair",
+            "score": 0.6597254872322083,
+            "xyxy": [
+              193.78736877441406,
+              84.00350952148438,
+              254.33607482910156,
+              151.31036376953125
+            ],
+            "alternatives": []
+          }
+        ]
+      },
+      {
+        "stamp": [
+          5,
+          600000000,
+          "d455_camera_optical_frame"
+        ],
+        "latency_ms": 111.41151300012098,
+        "objects": [
+          {
+            "label": "chair",
+            "score": 0.6637281179428101,
+            "xyxy": [
+              194.14512634277344,
+              83.97797393798828,
+              254.27532958984375,
+              151.4149627685547
+            ],
+            "alternatives": []
+          }
+        ]
+      },
+      {
+        "stamp": [
+          5,
+          700000000,
+          "d455_camera_optical_frame"
+        ],
+        "latency_ms": 122.52358299997468,
+        "objects": [
+          {
+            "label": "chair",
+            "score": 0.6199182868003845,
+            "xyxy": [
+              194.32513427734375,
+              83.82614135742188,
+              254.08448791503906,
+              151.60406494140625
+            ],
+            "alternatives": []
+          }
+        ]
+      },
+      {
+        "stamp": [
+          5,
+          800000000,
+          "d455_camera_optical_frame"
+        ],
+        "latency_ms": 115.84181900002477,
+        "objects": [
+          {
+            "label": "chair",
+            "score": 0.49976587295532227,
+            "xyxy": [
+              194.2964630126953,
+              83.96589660644531,
+              254.09799194335938,
+              151.6924285888672
+            ],
+            "alternatives": []
+          },
+          {
+            "label": "chair",
+            "score": 0.2930278182029724,
+            "xyxy": [
+              194.18914794921875,
+              83.82305908203125,
+              254.1029510498047,
+              151.8407745361328
+            ],
+            "alternatives": []
+          }
+        ]
+      },
+      {
+        "stamp": [
+          5,
+          900000000,
+          "d455_camera_optical_frame"
+        ],
+        "latency_ms": 108.05497700016531,
+        "objects": [
+          {
+            "label": "chair",
+            "score": 0.8193641901016235,
+            "xyxy": [
+              194.2737579345703,
+              83.9913101196289,
+              254.25405883789062,
+              151.90045166015625
+            ],
+            "alternatives": []
+          }
+        ]
+      },
+      {
+        "stamp": [
+          6,
+          0,
+          "d455_camera_optical_frame"
+        ],
+        "latency_ms": 124.9494279998089,
+        "objects": [
+          {
+            "label": "chair",
+            "score": 0.8123843669891357,
+            "xyxy": [
+              194.30519104003906,
+              83.967041015625,
+              254.17276000976562,
+              151.77053833007812
+            ],
+            "alternatives": []
+          }
+        ]
+      },
+      {
+        "stamp": [
+          6,
+          100000000,
+          "d455_camera_optical_frame"
+        ],
+        "latency_ms": 195.09678000008535,
+        "objects": [
+          {
+            "label": "chair",
+            "score": 0.7128344178199768,
+            "xyxy": [
+              194.31349182128906,
+              83.82913208007812,
+              254.08119201660156,
+              151.6121826171875
+            ],
+            "alternatives": []
+          }
+        ]
+      },
+      {
+        "stamp": [
+          6,
+          200000000,
+          "d455_camera_optical_frame"
+        ],
+        "latency_ms": 210.7747540001128,
+        "objects": [
+          {
+            "label": "chair",
+            "score": 0.5247390866279602,
+            "xyxy": [
+              194.2888641357422,
+              83.8031997680664,
+              254.0728759765625,
+              151.697998046875
+            ],
+            "alternatives": []
+          },
+          {
+            "label": "chair",
+            "score": 0.2555520832538605,
+            "xyxy": [
+              194.40957641601562,
+              83.95698547363281,
+              254.07847595214844,
+              151.48297119140625
+            ],
+            "alternatives": []
+          }
+        ]
+      },
+      {
+        "stamp": [
+          6,
+          300000000,
+          "d455_camera_optical_frame"
+        ],
+        "latency_ms": 116.93808700010777,
+        "objects": [
+          {
+            "label": "chair",
+            "score": 0.6297894716262817,
+            "xyxy": [
+              194.28041076660156,
+              83.81040954589844,
+              254.07476806640625,
+              151.76853942871094
+            ],
+            "alternatives": []
+          }
+        ]
+      },
+      {
+        "stamp": [
+          6,
+          400000000,
+          "d455_camera_optical_frame"
+        ],
+        "latency_ms": 114.31253900013871,
+        "objects": [
+          {
+            "label": "chair",
+            "score": 0.7878905534744263,
+            "xyxy": [
+              194.281005859375,
+              83.96539306640625,
+              254.10403442382812,
+              151.69174194335938
+            ],
+            "alternatives": []
+          }
+        ]
+      },
+      {
+        "stamp": [
+          6,
+          500000000,
+          "d455_camera_optical_frame"
+        ],
+        "latency_ms": 118.27725399984956,
+        "objects": [
+          {
+            "label": "chair",
+            "score": 0.7288647890090942,
+            "xyxy": [
+              194.2939910888672,
+              83.83101654052734,
+              254.07455444335938,
+              151.61659240722656
+            ],
+            "alternatives": []
+          }
+        ]
+      }
+    ]
+  },
+  "other_real_evidence": {
+    "empty_colored_block_scene": "69个对应帧，未检出COCO对象；不将方块强制分类",
+    "initial_chair": "46/46帧检出chair",
+    "back_view_limitation": "一次35帧中11帧检出chair，不代表持续准确率通过",
+    "front_view_comparison": "40/40帧检出chair，保持置信度0.25；只旋转椅子，未设置机器人位姿",
+    "camera_interruption_stale_seconds": 2.027,
+    "slam_concurrent": "真实/map 174×195，6717已知格，同时检测有输出",
+    "walking_with_slam_and_yolo": {
+      "result": "PASS",
+      "measurement_source": "Gazebo ground truth for evaluation only; no pose commands",
+      "controller": "CHAMP",
+      "tests": {
+        "forward_distance_m": 0.659714032907702,
+        "stop_drift_m": 1.7664503426267875e-05,
+        "left_turn_rad": 0.9109962083963705,
+        "reverse_distance_m": -0.4506264998225523,
+        "right_turn_rad": -1.1323821870905701,
+        "watchdog_drift_m": 5.077866193919985e-05,
+        "joint_count": 12,
+        "min_body_height_m": 0.2274341725211779,
+        "max_abs_roll_rad": 0.1148841985116228,
+        "max_abs_pitch_rad": 0.08232124705142463
+      },
+      "simulation_seconds": 36.0,
+      "wall_seconds": 129.963820748,
+      "real_time_factor": 0.2770001666063977
+    }
+  },
+  "same_scene_performance_control": {
+    "without_yolo_rtf": 0.09196948708093873,
+    "with_yolo_rtf": 0.12509170591897892,
+    "wall_seconds_each": 15,
+    "interpretation": "单次短时对照，关闭检测仍慢；不能据此证明检测提高性能或唯一解释慢速"
+  },
+  "user_entry": "原行走面板→YOLOv10目标检测→添加示例椅子→开始检测；Windows运行目标检测测试.cmd复测",
+  "current_session": "实际普通检测窗口与原行走仿真保留运行，测试专用SLAM已停；最终界面见最终运行界面.png",
+  "limits": [
+    "仅椅子正例已实测，不等于COCO80类准确率验收、人/瓶子尚未实测",
+    "相机320×240与视角会影响检出；类别存在率不等于precision/recall",
+    "实测输出约0.9～2.8帧/秒、RTF随负载波动，未实现全速实时",
+    "VirGL使用宿主4070SUPER图形不等于YOLO使用CUDA",
+    "笔记本接入共享部署代码但本轮未实机测试",
+    "本轮Ubuntu服务异常，ACPI退出时init SIGSEGV/panic；保存现场、确认panic后退出单一实例，离线qemu-img check无错，同配置恢复后复测。历史系统稳定性根因未修复，恢复后当前内核日志无新异常",
+    "新机自动安装配方已接通，但各网络的公开源连通性不保证；离线缓存仍需TLS及SHA校验"
+  ],
+  "evidence": [
+    "基线保护.json",
+    "实际部署哈希核对.json",
+    "真实三维椅子首轮/",
+    "椅子反向视角对照/",
+    "最终并行行走/",
+    "同场景关闭与开启检测性能.txt",
+    "恢复前离线磁盘检查.txt",
+    "系统异常与关机panic_serial.log",
+    "最终运行界面.png"
+  ]
+}

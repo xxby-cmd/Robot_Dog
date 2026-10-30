@@ -1,0 +1,32 @@
+YOLOv10 目标检测（台式机 / 笔记本共用）
+
+范围
+沿用当前 Jazzy / Harmonic / CHAMP 和原 RGB 相机。先接二维图像识别，不自动开导航、不把类别框当地图坐标、不读取仿真真值生成检测结果。模型为上游项目链接的 YOLOv10n ONNX 版本，支持 COCO 的80个常见类别；支持类别不等于本项目已经逐类验收。
+
+使用
+1. 在各电脑自己的工程打开“运行本机部署机器狗.cmd”，选择“应用工程更新”。新机按“首次部署机器狗.cmd”原流程安装。
+2. 在来宾原行走面板勾选启用传感器，启动仿真，等待12个关节就绪。
+3. 点“YOLOv10 目标检测”。点“添加示例椅子”可以加入正面朝向初始相机的真实三维目标；原来的彩色方块并不是预训练模型的独立检测类别。原背向摆放曾出现间歇漏检，对照结果保留在制作记录中，不隐藏失败视角。
+4. 点“开始检测”。首次自动准备独立环境与模型；成功后图像显示类别框及置信度。置信度是0到1的概率，处理频率必须为正数；修改后停止并重新开始。
+5. “停止检测”只停止本窗口启动的检测进程，不停止行走/SLAM。“移除示例椅子”只清理本工具添加的目标。关闭窗口会结束自己启动的检测和示例准备任务。
+
+复测
+添加示例椅子并开始检测后，在Windows打开“运行目标检测测试.cmd”。报告及真实原图/标注图保存到该电脑运行目录 verification/vision/本次编号。命令行 vm.py verify-vision 默认检查 chair，也可明确传其他英文COCO类名。
+验证器分别记录数据链通过、指定场景类别是否出现、帧率、对应图像时间戳、延迟、仿真实时因子和关节数。没有指定目标时只证明链路，不能报告识别准确率。单一椅子演示不代替完整数据集精度评价。
+class_hit_frames和class_frame_ratio单列各类别在采样帧中的检出情况；出现过一次不等于持续检出。视角、遮挡、目标在320×240图像中的大小和仿真外观都会影响结果。不要为了让测试变绿而暗中降低阈值；需要更换测试条件时保留原结果。
+模型TopK可能给同一完全相同的原始框返回多个类别候选。程序保留所有候选，在ROS Detection2D.results中表示备选类别，图像主标签显示最高得分；这不等于再次对相邻物体做NMS，不能把同一个框的低分备选画到高分标签上面。class_frame_ratio统计主类别，备选仍在逐帧记录中。
+
+环境与双机适配
+Windows盘符、SSH端口与显示/GPU设置继续读取本机配置，不复制台式机配置到笔记本。
+检测在Ubuntu独立venv内运行固定ONNX Runtime 1.23.2 CPU版，不改系统Python包；Gazebo图形仍沿原显卡设置。VirGL图形加速不等于CUDA推理，本轮不能把4070/4060的图形渲染器写成检测使用GPU。CPU线程固定为两个、关闭空闲自旋，只有最新相机帧待处理，避免旧帧排队。
+相机或结果过期会明确等待新画面，不继续拿旧框当当前识别。
+依赖由公开PyPI与Gazebo官方源取得，模型固定修订与SHA256；没有付费服务、账号或训练任务。首次需要联网，之后使用本机已校验缓存。
+网络较慢时可把同版本官方Linux Python3.12 amd64 wheel放到Ubuntu ~/.local/share/robotdog/wheels/，安装器会离线校验安装；模型可用 vision_assets.py --local-file 指向取得的同一校验文件。不能绕过TLS/哈希，也不执行未知来源模型的Python代码。
+
+来源与许可
+YOLOv10： https://github.com/THU-MIG/yolov10 ，模型为 https://huggingface.co/onnx-community/yolov10n ，固定修订57657320425ee34056408a57ad9d29c4d4815bd8，AGPL-3.0；下载配方见 vision_model.json，未把大模型二进制写入源码仓库。
+示例Chair：OpenRobotics，Gazebo Fuel第3版，https://fuel.gazebosim.org/1.0/OpenRobotics/models/Chair ，Creative Commons Attribution 4.0 International（https://creativecommons.org/licenses/by/4.0/）。原网格及纹理保持不变；本项目改为静止摆放、使用本机缓存绝对资源路径，场景名称不参与模型推理。
+ONNX Runtime线程说明： https://onnxruntime.ai/docs/performance/tune-performance/threading.html 。
+
+本轮状态与限制
+以制作记录/YOLO目标检测接入_20261030/完成核验.json为准。台式机自测、用户验收与笔记本实测分别记录，不能互相替代。当前虚拟机历史上存在系统级SEGV/init panic，恢复启动不代表根治；没有改变Windows安全/虚拟化设置或既定8核/12GB配置。

@@ -1,0 +1,2 @@
+# Ubuntu 24.04 / Python 3.12 amd64; dependencies supplied by signed apt packages.
+onnxruntime==1.23.2 --hash=sha256:0f9b4ae77f8e3c9bee50c27bc1beede83f786fe1d52e99ac85aa8d65a01e9b77

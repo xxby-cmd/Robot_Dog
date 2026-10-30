@@ -69,7 +69,7 @@ def alive(pid):
     except FileNotFoundError:
         return False
 launchers, panels, processes = [], [], {}
-ui_paths = {str(home/'bin'/name).encode() for name in ('robot-dog-panel.py','sensor_viewer.py','slam_panel.py')}
+ui_paths = {str(home/'bin'/name).encode() for name in ('robot-dog-panel.py','sensor_viewer.py','slam_panel.py','vision_panel.py')}
 for entry in Path('/proc').iterdir():
     if not entry.name.isdigit(): continue
     try:
@@ -81,6 +81,8 @@ for entry in Path('/proc').iterdir():
         launchers.append(int(entry.name))
     if len(args)>1 and args[1] in ui_paths:
         panels.append(int(entry.name))
+    if len(args)>1 and args[1] == str(home/'bin/yolo_node.py').encode():
+        launchers.append(int(entry.name))
 # Gazebo starts its server/GUI in separate process groups. Retain the exact
 # descendants before launch exits, including an orphan from an older update.
 world = str(home/'ros2_ws/install/unitree_go2_description/share/unitree_go2_description/worlds/default.sdf').encode()
@@ -134,7 +136,7 @@ with tempfile.TemporaryDirectory(prefix='robotdog-update-',dir=home/'.cache') as
 print('Previous source preserved; new source and tools copied',flush=True)
 PY
 source /opt/ros/jazzy/setup.bash
-packages=(ros-jazzy-sensor-msgs-py python3-numpy ros-jazzy-slam-toolbox ros-jazzy-pointcloud-to-laserscan ros-jazzy-nav2-map-server)
+packages=(ros-jazzy-sensor-msgs-py python3-numpy ros-jazzy-slam-toolbox ros-jazzy-pointcloud-to-laserscan ros-jazzy-nav2-map-server ros-jazzy-vision-msgs python3-venv python3-pil.imagetk python3-coloredlogs python3-flatbuffers python3-packaging python3-protobuf python3-sympy)
 missing=()
 for package in "${packages[@]}"; do
   if [ "$(dpkg-query -W -f='${Status}' "$package" 2>/dev/null || true)" != 'install ok installed' ]; then

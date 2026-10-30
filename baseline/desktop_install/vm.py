@@ -190,7 +190,7 @@ sudo -n systemctl --no-block poweroff'''
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['start','shutdown','status','exec','gpu','verify','verify-distance','upload','download'])
+    parser.add_argument('action', choices=['start','shutdown','status','exec','gpu','verify','verify-distance','verify-vision','upload','download'])
     parser.add_argument('command', nargs='*')
     parser.add_argument('--config', type=Path, default=DEFAULT_CONFIG)
     parser.add_argument('--headless', action='store_true')
@@ -233,6 +233,16 @@ def main():
         elif args.action == 'verify':
             command = 'source /opt/ros/jazzy/setup.bash; source ~/ros2_ws/install/setup.bash; python3 ~/bin/verify_walking.py'
             timeout = 1200
+        elif args.action == 'verify-vision':
+            if not startup.existing(config['qmp_port'],config.get('vm_name','Go2 Desktop ROS2 Jazzy CHAMP')):
+                raise RuntimeError('请先启动本机仿真和目标检测。')
+            print('请先在目标检测窗口添加示例椅子并开始检测，保持机器狗停止。',flush=True)
+            run_id=time.strftime('%Y%m%d-%H%M%S')+'-'+str(time.time_ns()%1_000_000_000).zfill(9)
+            remote_output='/home/robot/.local/share/robotdog/verification/vision/'+run_id
+            labels=args.command or ['chair']
+            command=('source /opt/ros/jazzy/setup.bash; python3 ~/bin/verify_vision.py --output '+
+                     shlex.quote(remote_output)+''.join(' --expected-label '+shlex.quote(label) for label in labels))
+            timeout=90
         elif args.action == 'verify-distance':
             if not startup.existing(config['qmp_port'],config.get('vm_name','Go2 Desktop ROS2 Jazzy CHAMP')):
                 raise RuntimeError('请先启动虚拟机和传感器模式，再运行距离测试。')
@@ -243,6 +253,20 @@ def main():
                        'python3 ~/bin/verify_sensors.py --ranges --output '+shlex.quote(remote_output))
             timeout = 600
         result = remote(config, command, timeout=timeout)
+        if args.action == 'verify-vision':
+            folder=Path(config['runtime'])/'verification/vision'/run_id
+            folder.mkdir(parents=True,exist_ok=True)
+            (folder/'test-output.txt').write_text(result.stdout+result.stderr,encoding='utf-8')
+            for name in ('report.json','camera.png','annotated.png','annotated-source.png'):
+                downloaded=subprocess.run(ssh_args(config)+['cat '+shlex.quote(remote_output+'/'+name)],
+                    capture_output=True,timeout=20,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+                if downloaded.returncode==0:
+                    (folder/name).write_bytes(downloaded.stdout)
+            print(result.stdout,end='')
+            print(result.stderr,end='',file=sys.stderr)
+            print('目标检测链路及类别出现检查'+('通过；不代表准确率验收。' if result.returncode==0 else '未通过，请查看报告。'))
+            print('本机报告：',folder)
+            raise SystemExit(result.returncode)
         if args.action == 'verify-distance':
             folder=Path(config['runtime'])/'verification/ranges'/run_id
             folder.mkdir(parents=True,exist_ok=True)

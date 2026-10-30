@@ -254,10 +254,14 @@ tk.Label(root, textvariable=speed_status, bg='#f5f7fa', fg='#526071').pack(pady=
 tk.Button(root, text='速度调参', command=tune_speeds, width=26, pady=4).pack(pady=2)
 tk.Button(root, text='启动仿真', command=start, width=26, pady=4).pack(pady=2)
 tk.Checkbutton(root, text='启用激光、深度相机与里程计（重启仿真生效）', variable=with_sensors, bg='#f5f7fa').pack()
-tk.Button(root, text='查看实时传感器', width=26,
-          command=lambda: subprocess.Popen(['python3', '/home/robot/bin/sensor_viewer.py'])).pack(pady=2)
-tk.Button(root, text='SLAM 建图与地图保存', width=26,
-          command=lambda: subprocess.Popen(['python3', '/home/robot/bin/slam_panel.py'])).pack(pady=2)
+tools = tk.Frame(root, bg='#f5f7fa')
+tools.pack(pady=2)
+tk.Button(tools, text='实时传感器', width=11,
+          command=lambda: subprocess.Popen(['python3', '/home/robot/bin/sensor_viewer.py'])).grid(row=0,column=0,padx=3,pady=2)
+tk.Button(tools, text='SLAM 建图与地图保存', width=19,
+          command=lambda: subprocess.Popen(['python3', '/home/robot/bin/slam_panel.py'])).grid(row=0,column=1,padx=3,pady=2)
+tk.Button(tools, text='YOLOv10 目标检测', width=33,
+          command=lambda: subprocess.Popen(['python3', '/home/robot/bin/vision_panel.py'])).grid(row=1,column=0,columnspan=2,pady=2)
 pad = tk.Frame(root, bg='#f5f7fa')
 pad.pack(pady=6)
 for text, row, col, action in [
