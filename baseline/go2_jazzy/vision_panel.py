@@ -12,6 +12,7 @@ import subprocess
 import threading
 import time
 import tkinter as tk
+from panel_surface import PanelSurface
 os.environ['ROS_DOMAIN_ID'] = '42'
 import rclpy
 from rclpy.qos import qos_profile_sensor_data
@@ -20,10 +21,10 @@ from std_msgs.msg import String
 from yolo_runtime import rgb_array
 
 
-def main():
+def main(parent=None, compact=False):
     parser = argparse.ArgumentParser(description='Go2 YOLOv10 camera viewer')
     parser.add_argument('--start',action='store_true',help='Start detection after opening the window')
-    options = parser.parse_args()
+    options = parser.parse_args() if parent is None else argparse.Namespace(start=False)
     cache = Path.home()/'.cache'
     cache.mkdir(exist_ok=True)
     handle = (cache/'robotdog-vision-panel.lock').open('w')
@@ -31,33 +32,56 @@ def main():
         fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError:
         return
-    rclpy.init()
+    panel = PanelSurface(parent, 'Go2 · YOLOv10 目标检测', 700, 690)
     node = rclpy.create_node('go2_yolo_viewer')
-    root = tk.Tk()
-    root.title('Go2 · YOLOv10 目标检测')
-    root.geometry('700x690+445+25')
+    panel.attach(node)
+    root = panel.root
     status = tk.StringVar(value='先启动含相机的行走仿真，再点击“开始检测”。')
     confidence = tk.StringVar(value='0.25')
     frequency = tk.StringVar(value='5')
-    tk.Label(root, text='YOLOv10 目标检测', font=('Noto Sans CJK SC', 17, 'bold')).pack(pady=(12, 6))
+    heading = tk.Frame(root)
+    heading.pack(fill='x',padx=8,pady=(4,2))
+    tk.Label(heading,text='目标检测',font=('Noto Sans CJK SC',12 if compact else 17,'bold')).pack(side='left')
     form = tk.Frame(root)
-    form.pack()
-    for label, variable in [('置信度', confidence), ('每秒最多处理帧数', frequency)]:
-        tk.Label(form, text=label).pack(side='left', padx=4)
-        tk.Entry(form, textvariable=variable, width=7).pack(side='left', padx=4)
-    tk.Label(root, text='框表示图像中的位置，不表示已确定物体在地图上的坐标。', wraplength=650).pack(pady=7)
-    canvas = tk.Canvas(root, width=640, height=360, bg='#182332', highlightthickness=0)
-    canvas.pack()
-    canvas.create_text(320, 180, text='等待相机检测画面', fill='white', tags='picture')
-    summary = tk.StringVar(value='尚未检测')
-    tk.Label(root, textvariable=summary, justify='left', wraplength=650).pack(pady=8)
-    tk.Label(root, textvariable=status, justify='left', wraplength=650, fg='#35516a').pack(pady=4)
+    def parameters():
+        if form.winfo_manager():
+            form.pack_forget()
+        else:
+            form.pack(after=heading,fill='x',padx=5,pady=3)
+    tk.Button(heading,text='参数',command=parameters,padx=6).pack(side='right')
+    if not compact:
+        form.pack(fill='x',padx=8,pady=3)
+    for label, variable in [('置信度', confidence), ('最高帧/秒', frequency)]:
+        tk.Label(form, text=label).pack(side='left',padx=3)
+        tk.Entry(form,textvariable=variable,width=6).pack(side='left',padx=3)
+    summary = tk.StringVar(value='等待检测画面')
+    # Reserve controls first so resizing cannot push the stop button off-screen.
+    footer = tk.Frame(root)
+    footer.pack(side='bottom',fill='x',padx=6,pady=3)
+    tk.Label(footer,textvariable=status,justify='left',wraplength=390,fg='#35516a').pack(fill='x',pady=2)
+    actions = tk.Frame(footer)
+    actions.pack(fill='x')
+    demos = tk.Frame(footer)
+    demos.pack(fill='x',pady=2)
+    tk.Label(footer,textvariable=summary,justify='left',wraplength=390,anchor='w').pack(fill='x',pady=2)
+    canvas = tk.Canvas(root,bg='#182332',highlightthickness=0,height=180 if compact else 360)
+    canvas.pack(fill='both',expand=True,padx=6,pady=3)
+    canvas.create_text(150,90,text='等待相机检测画面',fill='white',tags='picture')
+    def resized(event):
+        if event.widget is not root:
+            return
+        for widget in footer.winfo_children():
+            if isinstance(widget,tk.Label):
+                widget.configure(wraplength=max(150,event.width-14))
+    root.bind('<Configure>',resized,add='+')
     process = None
     stopping = False
     closing = False
     last_picture = None
     last_image = 0.0
     image = None
+    rendered_picture = None
+    rendered_size = None
     logs = Path.home()/'.ros/yolo.log'
     logs.parent.mkdir(exist_ok=True)
     scene_process = None
@@ -160,37 +184,35 @@ def main():
             scene_results.put(message)
         threading.Thread(target=work,daemon=True).start()
 
-    actions = tk.Frame(root)
-    actions.pack(pady=6)
-    begin = tk.Button(actions, text='开始检测', width=14, pady=7, command=start)
-    begin.pack(side='left', padx=7)
-    tk.Button(actions, text='停止检测', width=14, pady=7, command=stop).pack(side='left', padx=7)
-    demos = tk.Frame(root)
-    demos.pack(pady=4)
+    begin = tk.Button(actions, text='开始检测', width=12, pady=2 if compact else 7, command=start)
+    begin.pack(side='left',padx=3,expand=True,fill='x')
+    tk.Button(actions, text='停止检测', width=12, pady=2 if compact else 7, command=stop).pack(side='left',padx=3,expand=True,fill='x')
     add_scene = tk.Button(demos,text='添加示例椅子',width=16,command=lambda:scene('add'))
-    add_scene.pack(side='left',padx=7)
+    add_scene.pack(side='left',padx=3,expand=True,fill='x')
     remove_scene = tk.Button(demos,text='移除示例椅子',width=16,command=lambda:scene('remove'))
-    remove_scene.pack(side='left',padx=7)
-    root.protocol('WM_DELETE_WINDOW', close)
-    signal.signal(signal.SIGTERM, lambda *_: root.after(0, close))
-    signal.signal(signal.SIGINT, lambda *_: root.after(0, close))
+    remove_scene.pack(side='left',padx=3,expand=True,fill='x')
 
     def tick():
-        nonlocal process, stopping, last_picture, image, scene_busy
+        nonlocal process, stopping, last_picture, image, scene_busy, rendered_picture, rendered_size
         for _ in range(20):
-            rclpy.spin_once(node, timeout_sec=0)
-        if last_picture is not None:
-            pixels = rgb_array(last_picture)
+            panel.spin(1)
+        size = (max(1,canvas.winfo_width()),max(1,canvas.winfo_height()))
+        if last_picture is not None or (rendered_picture is not None and size != rendered_size):
+            if last_picture is not None:
+                rendered_picture = last_picture
+            pixels = rgb_array(rendered_picture)
             from PIL import Image as PILImage, ImageTk
             display = PILImage.fromarray(pixels)
-            display.thumbnail((640, 360))
+            display.thumbnail(size)
             image = ImageTk.PhotoImage(display)
             canvas.delete('picture')
-            canvas.create_image(320, 180, image=image, tags='picture')
+            canvas.create_image(size[0]/2,size[1]/2,image=image,tags='picture')
             last_picture = None
+            rendered_size = size
         if last_image and time.monotonic()-last_image > 2:
+            rendered_picture = None
             canvas.delete('picture')
-            canvas.create_text(320, 180, text='等待新的检测画面', fill='white', tags='picture')
+            canvas.create_text(size[0]/2,size[1]/2,text='等待新的检测画面',fill='white',tags='picture')
         if process is not None and process.poll() is not None:
             code = process.returncode
             process = None
@@ -204,20 +226,15 @@ def main():
             add_scene.configure(state='normal')
             remove_scene.configure(state='normal')
         if closing and process is None and not scene_busy:
-            root.destroy()
+            panel.finish()
+            handle.close()
             return
-        root.after(70, tick)
+        panel.after(70, tick)
 
-    root.after(70, tick)
+    panel.after(70, tick)
     if options.start:
-        root.after(300,start)
-    try:
-        root.mainloop()
-    finally:
-        node.destroy_node()
-        if rclpy.ok():
-            rclpy.shutdown()
-        handle.close()
+        panel.after(300,start)
+    return panel.run(close)
 
 
 if __name__ == '__main__':

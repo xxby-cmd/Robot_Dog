@@ -69,7 +69,7 @@ def alive(pid):
     except FileNotFoundError:
         return False
 launchers, panels, processes = [], [], {}
-ui_paths = {str(home/'bin'/name).encode() for name in ('robot-dog-panel.py','sensor_viewer.py','slam_panel.py','vision_panel.py')}
+ui_paths = {str(home/'bin'/name).encode() for name in ('demo_workspace.py','robot-dog-panel.py','sensor_viewer.py','slam_panel.py','vision_panel.py')}
 for entry in Path('/proc').iterdir():
     if not entry.name.isdigit(): continue
     try:

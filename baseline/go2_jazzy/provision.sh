@@ -30,7 +30,7 @@ mkdir -p /home/robot/ros2_ws/src /home/robot/bin /home/robot/Desktop /home/robot
 tar -xzf /mnt/robotdog-seed/go2-champ-source.tar.gz -C /home/robot/ros2_ws/src
 chown -R robot:robot /home/robot/ros2_ws
 sudo -u robot bash -c 'source /opt/ros/jazzy/setup.bash; cd /home/robot/ros2_ws; colcon build --parallel-workers 3 --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF'
-for entry in start-simulation.sh start-sensors.sh start-slam.sh slam_panel.py slam_session.py verify_slam.py start-vision.sh install-vision.sh vision_panel.py yolo_node.py yolo_runtime.py vision_assets.py vision_model.json vision-requirements.txt verify_vision.py vision_scene.py start-panel.sh robot-dog-panel.py teleop_settings.py sensor_viewer.py sensor_measurements.py verify_sensors.py start_physics.py verify_walking.py measure_performance.py focus_robot.py capture_guest.py walking.gui.config; do
+for entry in demo_workspace.py panel_surface.py gazebo_viewport.py start-simulation.sh start-sensors.sh start-slam.sh slam_panel.py slam_session.py verify_slam.py start-vision.sh install-vision.sh vision_panel.py yolo_node.py yolo_runtime.py vision_assets.py vision_model.json vision-requirements.txt verify_vision.py vision_scene.py start-panel.sh robot-dog-panel.py teleop_settings.py sensor_viewer.py sensor_measurements.py verify_sensors.py start_physics.py verify_walking.py measure_performance.py focus_robot.py capture_guest.py walking.gui.config; do
   if [ -f "/mnt/robotdog-seed/$entry" ]; then install -o robot -g robot -m 755 "/mnt/robotdog-seed/$entry" "/home/robot/bin/$entry"; fi
 done
 mkdir -p /etc/lightdm/lightdm.conf.d

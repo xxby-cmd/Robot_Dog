@@ -8,4 +8,7 @@ export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=/run/user
 # Apply only inside this guest desktop; preserve physical/control update rates.
 xfconf-query -c xfwm4 -p /general/use_compositing -s false || true
 xrandr --output Virtual-1 --mode 1280x768 || true
-exec python3 /home/robot/bin/robot-dog-panel.py
+if [ "${1:-}" = "--classic" ]; then
+  exec python3 /home/robot/bin/robot-dog-panel.py
+fi
+exec python3 /home/robot/bin/demo_workspace.py

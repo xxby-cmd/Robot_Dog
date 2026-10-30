@@ -1,0 +1,201 @@
+{
+  "date": "2026-10-30",
+  "status": "台式机自测通过，待用户验收；尚未推送GitHub",
+  "request": "单一演示总览：机器狗三维主画面、SLAM地图、YOLO检测与紧凑控制区",
+  "branch": "codex/demo-workspace-20261030",
+  "baseline": "a9ef326c5a83f19fa6cc262324396fc04ee4d141",
+  "preserved_tag": "codex/pre-demo-workspace-20261030",
+  "source_backup": "原可运行源码_a9ef326.zip",
+  "implementation": [
+    "原start-panel.sh默认进入总览，--classic保留独立控制",
+    "原Gazebo X11原生窗口挂入总览，不复制截图视频流，不启动第二份物理场景",
+    "复用原控制/建图/检测视图，独立ROS executor，顶层统一管理上下文和退出，取消已销毁视图的定时回调",
+    "窗口分隔条、全屏F11/Esc、三维画面独立/放回、原相机跟随、详细传感器入口",
+    "地图和检测图像适应区域尺寸、等比例显示；停止按钮与参数入口保留",
+    "原就绪/机身倾斜保护决定方向按钮是否可用，原保护阈值未改；建图按钮按自身收到的新鲜里程计启用"
+  ],
+  "desktop_checks": {
+    "host_unit_tests": 40,
+    "diff_check": "PASS",
+    "layout_checks": [
+      {
+        "label": "default",
+        "size": [
+          1256,
+          696
+        ],
+        "surfaces": [
+          [
+            6,
+            523,
+            817,
+            136
+          ],
+          [
+            830,
+            51,
+            420,
+            285
+          ],
+          [
+            830,
+            342,
+            420,
+            317
+          ]
+        ],
+        "clipped_buttons": []
+      },
+      {
+        "label": "1100x650",
+        "size": [
+          1100,
+          650
+        ],
+        "surfaces": [
+          [
+            6,
+            477,
+            714,
+            136
+          ],
+          [
+            727,
+            51,
+            367,
+            263
+          ],
+          [
+            727,
+            320,
+            367,
+            293
+          ]
+        ],
+        "clipped_buttons": []
+      },
+      {
+        "label": "1100x650-with-parameters",
+        "size": [
+          1100,
+          650
+        ],
+        "surfaces": [
+          [
+            6,
+            477,
+            714,
+            136
+          ],
+          [
+            727,
+            51,
+            367,
+            263
+          ],
+          [
+            727,
+            320,
+            367,
+            293
+          ]
+        ],
+        "clipped_buttons": []
+      }
+    ],
+    "real_callbacks": [
+      "Original motion readiness confirmed; real arrow press generated",
+      "Original start-map/start-detection/add-real-chair callbacks invoked",
+      "Actual map and detections present; native Gazebo parent verified",
+      "Small-screen controls fit; real native viewport detached",
+      "Real native viewport restored after desktop detach",
+      "Detection stopped and restarted through original UI callbacks",
+      "Real map saved through compact UI; closing original workspace",
+      "Original physical walking regression passed with map and detection active"
+    ],
+    "low_speed_hold_release": "Real /cmd_vel 0.08 m/s then zero after release; original speeds restored",
+    "user_speeds_restored": true,
+    "all_surfaces_closed_normally": [
+      true,
+      true,
+      true
+    ],
+    "real_map": {
+      "width": 171,
+      "height": 184,
+      "known_cells": 1121
+    },
+    "saved_map": "/home/robot/.local/share/robotdog/maps/20261030_124930_329053/session.json",
+    "vision": "实际camera标注图曾检出chair，见总览最终实景.png；最早记录帧在示例模型出现前可为空",
+    "physical_regression_with_mapping_and_detection": {
+      "result": "PASS",
+      "measurement_source": "Gazebo ground truth for evaluation only; no pose commands",
+      "controller": "CHAMP",
+      "tests": {
+        "forward_distance_m": 0.6622587149552475,
+        "stop_drift_m": 3.744554958847101e-05,
+        "left_turn_rad": 0.966953635225351,
+        "reverse_distance_m": -0.472922944158491,
+        "right_turn_rad": -0.888370524795622,
+        "watchdog_drift_m": 6.855080208429824e-05,
+        "joint_count": 12,
+        "min_body_height_m": 0.22569601298860814,
+        "max_abs_roll_rad": 0.12369012227591034,
+        "max_abs_pitch_rad": 0.10235664018713847
+      },
+      "simulation_seconds": 36.0,
+      "wall_seconds": 126.80820008699999,
+      "real_time_factor": 0.2838933126982426
+    },
+    "deployed_source_consistency": {
+      "files": 123,
+      "mismatches": [],
+      "fingerprint": "afcf90813d75943bc7fd4f006c773aabacf4e01e7f325d794d7f89a20aa5f967",
+      "installed_manifest_matches": true,
+      "tool_eol": "CRLF normalized to LF by shared installer",
+      "guest_vendor_root": "~/ros2_ws/src/go2_champ"
+    }
+  },
+  "startup_test_corrections": [
+    "第一批辅助测试过早点击建图，原保护拒绝；最终按界面自身收到的数据就绪状态触发，未绕过原保护",
+    "X11窗口管理器会给独立窗口重新加装饰父窗口，测试改核桌面客户端归属与离开原嵌入区域，不能把父窗口不是X根窗口误判为未独立",
+    "调参弹窗的逻辑父级在嵌入控件内，辅助测试按真实控件树定位，原业务无需另写假入口"
+  ],
+  "important_failure": {
+    "evidence": "姿态保护拒绝移动_report.json、方向键回调检查现场.png",
+    "observation": "一轮测试在没有非零cmd_vel采样前机器狗已翻倒，原姿态保护拒绝按钮移动",
+    "cause": "未定位。不能据此唯一归因于UI、YOLO或某个调度参数，也未排除负载/启动时序影响",
+    "recovery": "正常关闭本轮应用/仿真，再启动现有实例；保持8核/12GB与原Windows/虚拟化配置，按反馈就绪、低速真实按钮检查后完整物理回归PASS。没有设置机器人真值位姿"
+  },
+  "limits": [
+    "本轮是布局整合，未增加导航、语义地图或探索",
+    "仿真慢速与此前系统稳定性问题尚未根治；一次回归通过不是长期稳定证明",
+    "来宾X11桌面原生嵌入已测，未验证Wayland或不同平台路线",
+    "笔记本共享安装/更新清单已覆盖，本轮未在笔记本实机测试",
+    "地图箭头是估计位置，二维检测框不是地图物体坐标，真值仅用于独立物理验证"
+  ],
+  "final_state": "测试驱动与测试启动的功能均已正常关闭，普通start-panel.sh入口已重新启动总览供查看；建图和检测按界面按钮分别开始。旧D:/Robot_Dog已跟踪改动为空；个人速度0.7/0.7/0.7恢复。",
+  "evidence": [
+    "真实界面回调与物理回归.json",
+    "总览并行行走验证.json",
+    "实际部署一致性.json",
+    "总览真实建图与检测.png",
+    "小屏参数与全部按钮.png",
+    "总览最终实景.png",
+    "普通入口恢复.txt"
+  ],
+  "late_startup_fixes": {
+    "observed_failure": "普通入口panel_surface.after的后台线程0延时回调可能先于timer ID赋值而执行，日志出现未绑定job；Qt晚到窗口状态也可能改变父级",
+    "fix": "后台只入队，Tk主线程登记/执行全部定时器；退出取消派发器与自己的回调。每次布局同步核实际XQueryTree父级，Qt晚到跳出时重新挂入同一容器。",
+    "host_regression": "4项线程/ROS所有权/销毁检查新增，全套40通过",
+    "normal_entry": "普通入口真实祖先链包含总览；人为模拟同一个Qt窗口晚到重挂后1秒内恢复且保持嵌入，证据普通入口晚到窗口恢复.json",
+    "current_source_end_to_end": "修订后的完整Tk回调、缩放、独立/放回、地图保存、检测重开及并行物理回归全部重新PASS，0个回调异常；非沿用修订前报告。"
+  },
+  "additional_system_failure": {
+    "evidence": "普通入口后系统panic_serial.log、系统panic_QMP.json、panic实例退出.json",
+    "observation": "旧版普通入口核验后的这一实例约1720秒发生init SIGSEGV内核panic，SSH失效。更新当时停在上传阶段并超时，尚未应用这次线程/父级修订。",
+    "scope": "无法唯一归因；仍未解决底层稳定性。保存现场、核目标QMP名称，仅对已panic实例请求ACPI后QMP退出；确认无QEMU且文件可独占后qemu-img check返回0，未修复/转换盘、未改宿主设置，同配置重启。",
+    "recovery_evidence": "panic恢复前离线检查.txt",
+    "current_boot": "同配置恢复后，本轮最终测试结束内核未检出新的SEGV/panic；不代表长期稳定性已解决。"
+  }
+}

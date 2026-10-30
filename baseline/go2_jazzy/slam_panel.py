@@ -11,6 +11,7 @@ import subprocess
 import threading
 import time
 import tkinter as tk
+from panel_surface import PanelSurface
 from tkinter import filedialog
 
 import numpy as np
@@ -23,13 +24,13 @@ from tf2_ros import Buffer, TransformListener, TransformException
 from slam_session import MAPS, save_session, load_session
 
 
-def main():
+def main(parent=None, compact=False):
     lock = (Path.home()/'.cache/robot-dog-slam-panel.lock').open('a')
     try:
         fcntl.flock(lock, fcntl.LOCK_EX|fcntl.LOCK_NB)
     except BlockingIOError:
         return
-    rclpy.init()
+    panel = PanelSurface(parent, 'Go2 · SLAM 建图', 760, 690)
     node = rclpy.create_node('robotdog_mapping_panel')
     stop_pub = node.create_publisher(Twist,'/cmd_vel',10)
     frames, received = {}, {}
@@ -44,21 +45,21 @@ def main():
     node.create_subscription(Odometry,'/odom',lambda msg:remember('odom',msg),10)
     buffer = Buffer(node=node)
     listener = TransformListener(buffer,node)
-    root = tk.Tk()
-    root.title('Go2 · SLAM 建图')
-    root.geometry('760x690+450+25')
-    root.minsize(620,560)
+    panel.attach(node)
+    root = panel.root
     process, closing, busy = None, False, False
     messages = queue.Queue()
     status = tk.StringVar(value='先在行走面板启动传感器仿真，再点击“开始建图”。')
     detail = tk.StringVar(value='等待激光与里程计')
-    tk.Label(root,text='SLAM 建图',font=('Noto Sans CJK SC',18,'bold')).pack(pady=(10,4))
-    tk.Label(root,text='白色：已观测空地   黑色：障碍物   灰色：未知   蓝色箭头：估计位置').pack()
+    tk.Label(root,text='SLAM 建图',font=('Noto Sans CJK SC',12 if compact else 18,'bold')).pack(pady=(3,1) if compact else (10,4))
+    tk.Label(root,text='白：空地 · 黑：障碍 · 灰：未知 · 箭头：估计位置',font=('Noto Sans CJK SC',9)).pack()
     canvas = tk.Canvas(root,bg='#adb5bd',highlightthickness=0)
-    canvas.pack(fill='both',expand=True,padx=12,pady=10)
-    controls = tk.Frame(root)
-    controls.pack(pady=3)
+    footer = tk.Frame(root)
+    footer.pack(side='bottom',fill='x',padx=6,pady=3)
+    controls = tk.Frame(footer)
+    controls.pack(fill='x',pady=2)
     buttons = []
+    canvas.pack(fill='both',expand=True,padx=6,pady=3)
     last_map, photo = None, None
 
     def pose():
@@ -104,7 +105,7 @@ def main():
         process = subprocess.Popen([str(Path.home()/'bin/start-slam.sh')],
             stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
         log.close()
-        status.set('正在等待扫描、坐标转换与地图；可在行走面板缓慢移动。')
+        status.set('正在启动建图，请缓慢移动。' if compact else '正在等待扫描、坐标转换与地图；可在行走面板缓慢移动。')
 
     def stop():
         nonlocal process
@@ -142,19 +143,32 @@ def main():
         status.set('正在加载地图；机器狗需接近该会话保存时的位置和朝向……')
         work(lambda worker:'已加载，可继续建图：'+str(load_session(worker,path)))
 
-    for label,command in [('开始建图',start),('保存地图',save),('加载并继续',load),('停止建图',stop)]:
-        button = tk.Button(controls,text=label,command=command,width=13,pady=7)
-        button.pack(side='left',padx=4)
+    for index,(label,command) in enumerate([('开始建图',start),('保存地图',save),('加载并继续',load),('停止建图',stop)]):
+        button = tk.Button(controls,text=label,command=command,width=11,pady=2 if compact else 7)
+        if compact:
+            button.grid(row=index//2,column=index%2,sticky='ew',padx=2,pady=1)
+        else:
+            button.pack(side='left',padx=4)
         buttons.append(button)
-    tk.Label(root,textvariable=detail,wraplength=720).pack(pady=4)
-    tk.Label(root,textvariable=status,wraplength=720,justify='left').pack(padx=12,pady=5)
-    tk.Label(root,text='方向控制沿用行走面板；加载前先开始建图，并保持在保存位置附近。\n地图保存在本机 Ubuntu 的 ~/.local/share/robotdog/maps/',
+    controls.columnconfigure((0,1),weight=1)
+    tk.Label(footer,textvariable=detail,wraplength=400).pack(fill='x',pady=2)
+    tk.Label(footer,textvariable=status,wraplength=400,justify='left').pack(padx=12,pady=5)
+    if not compact:
+        tk.Label(footer,text='方向控制沿用行走面板；加载前先开始建图，并保持在保存位置附近。\n地图保存在本机 Ubuntu 的 ~/.local/share/robotdog/maps/',
              wraplength=720).pack(pady=(2,10))
+
+    def resize(event):
+        if event.widget is not root:
+            return
+        for widget in footer.winfo_children():
+            if isinstance(widget,tk.Label):
+                widget.configure(wraplength=max(160,event.width-16))
+    root.bind('<Configure>',resize,add='+')
 
     def tick():
         nonlocal last_map,photo,busy
         for _ in range(60):
-            rclpy.spin_once(node,timeout_sec=0)
+            panel.spin(1)
         while not messages.empty():
             kind,text = messages.get_nowait()
             if kind == 'status':
@@ -163,10 +177,12 @@ def main():
                 busy = False
                 for button in buttons:
                     button.configure(state='normal')
+        if not busy:
+            buttons[0].configure(state='normal' if time.monotonic()-received.get('odom',0)<3 else 'disabled')
         message = frames.get('map')
         if message is not None:
             if last_map is None and process is None:
-                status.set('正在显示已有建图会话；使用行走面板缓慢移动，可保存或加载地图。')
+                status.set('正在显示已有建图会话，可保存地图。' if compact else '正在显示已有建图会话；使用行走面板缓慢移动，可保存或加载地图。')
             width,height = canvas.winfo_width(),canvas.winfo_height()
             key = (id(message),width,height)
             if key != last_map and width>10 and height>10:
@@ -197,20 +213,20 @@ def main():
             except TransformException:
                 position='等待地图坐标'
             age=time.monotonic()-received['map']
-            detail.set(f'{message.info.width}×{message.info.height} 格 · {message.info.resolution:g} 米/格 · '+
-                       f'{position} · 地图更新于 {age:.1f} 秒前')
+            detail.set((f'{message.info.resolution:g} 米/格 · {position}' if compact else
+                        f'{message.info.width}×{message.info.height} 格 · {message.info.resolution:g} 米/格 · '+
+                        f'{position} · 地图更新于 {age:.1f} 秒前'))
         elif process is not None and process.poll() is not None:
             status.set('建图进程已退出，请查看 ~/.ros/slam.log；可重新开始。')
         if closing and not busy:
             if process is not None and process.poll() is None:
                 stop()
-                root.after(100,tick)
+                panel.after(100,tick)
                 return
-            node.destroy_node()
-            rclpy.shutdown()
-            root.destroy()
+            panel.finish()
+            lock.close()
             return
-        root.after(100,tick)
+        panel.after(100,tick)
 
     def close():
         nonlocal closing
@@ -218,11 +234,8 @@ def main():
         if not busy and process is not None and process.poll() is None:
             stop()
         closing=True
-    root.protocol('WM_DELETE_WINDOW',close)
-    signal.signal(signal.SIGTERM,lambda *_:root.after_idle(close))
-    signal.signal(signal.SIGINT,lambda *_:root.after_idle(close))
-    root.after(100,tick)
-    root.mainloop()
+    panel.after(100,tick)
+    return panel.run(close)
 
 
 if __name__ == '__main__':
